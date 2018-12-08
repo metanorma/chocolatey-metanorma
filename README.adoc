@@ -1,0 +1,78 @@
+= chocolatey-metanorma: Chocolatey install for Metanorma
+
+
+== Modifying the package
+
+. Edit the `metanorma.nuspec` configuration file.
+. Edit the `./tools/chocolateyInstall.ps1` install script
+. Edit the `./tools/chocolateyUninstall.ps1` uninstall script
+. You **must** save your files with *UTF-8* character encoding without BOM.
+
+NOTE: Make sure you install checksum (`choco install checksum`) and
+calculate checksums for the 32-bit and 64-bit copies of metanorma
+in the
+https://chocolatey.org/docs/helpers-install-chocolatey-zip-package[Install-ChocolateyZipPackage]
+command of the `chocolateyInstall.ps1` file.
+
+== Generating the checksum
+
+Use the `checksum` tool to calculate the sha256 checksum for each of the zip files from the metanorma releases:
+
+`C:\DirectoryWhereMetanormaZipIsAt>checksum -f=".\metanorma_1.0.1_Windows-32bit.zip" -t=sha256`
+
+== Building the package
+
+* Run `choco pack` in the same directory as `metanorma.nuspec`
+
+NOTE: If you are running this from a command prompt/Powershell prompt, you must run it "`as Administrator`".
+
+== Testing the package
+
+NOTE: Testing should be done on a Virtual Machine (See: https://github.com/chocolatey/chocolatey-test-environment)
+
+In the package directory, use:
+
+* `choco install metanorma -s "$pwd" -f` (Powershell)
+* `choco install metanorma -s '%cd%' -f` (everywhere else)
+
+Or, use the full path:
+
+* `choco install metanorma -source 'c:\path\to\package' -f`
+
+After executing the install, ensure that `metanorma.exe` is installed by executing the following command from the command prompt:
+
+[source,sh]
+----
+metanorma version
+----
+
+If it is properly installed, you will see the current version of Metanorma.
+
+=== Testing uninstallation
+
+NOTE: The Chocolatey install path on Windows is typically `C:\ProgramData\chocolatey`
+
+Execute the following command to uninstall Metanorma.
+
+[source,sh]
+----
+choco uninstall metanorma -y
+----
+
+After executing the uninstall ensure that `metanorma` is not found in the Chocolatey install path.
+
+You can also try running `metanorma version` from the command-line to see if it is still installed
+
+
+== Publish the package to the Chocolatey community feed repository
+
+[source,sh]
+----
+choco apikey -k [API_KEY_HERE] -source https://chocolatey.org/`
+
+# package name can be omitted below
+choco push metanorma.[version num].nupkg -s https://chocolatey.org/
+----
+
+See the https://github.com/chocolatey/choco/wiki/CreatePackagesQuickStart[Chocolatey Packages Quick Start]
+for more information.
