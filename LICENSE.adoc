@@ -1,0 +1,3 @@
+= MIT license
+
+The content in this repository is provided under the MIT license.
