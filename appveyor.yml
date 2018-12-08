@@ -1,0 +1,18 @@
+version: '{build}'
+
+environment:
+  CHOCO_API_KEY:
+    secure: TODO # https://www.appveyor.com/docs/build-configuration/#secure-variables
+
+
+build_script:
+  - choco pack
+
+test_script:
+  - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
+
+deploy: false # disable deployment by default
+
+deploy_script:
+  - choco apikey -k %CHOCO_API_KEY% -source https://chocolatey.org/`
+  - choco push metanorma.0.3.3.nupkg -s https://chocolatey.org/
