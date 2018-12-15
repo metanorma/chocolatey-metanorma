@@ -2,8 +2,7 @@ version: '{build}'
 
 environment:
   CHOCO_API_KEY:
-    secure: TODO # https://www.appveyor.com/docs/build-configuration/#secure-variables
-
+    secure: hsyCpvNm18kiTWHdcPSN7PLra8FGfypgnSuviKQMBdY1LGnpjE4//JD1uQ+vnzU5
 
 build_script:
   - choco pack
