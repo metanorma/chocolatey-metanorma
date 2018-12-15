@@ -3,7 +3,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>metanorma</id>
-    <version>0.3.3</version>
+    <version>1.0.10</version>
     <owners>Ribose Inc.</owners>
     <title>metanorma</title>
     <authors>Ribose Inc.</authors>
@@ -19,7 +19,7 @@
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
  - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.]]></description>
     <dependencies>
-      <dependency id="ruby" version="2.3.3" />
+      <dependency id="ruby" version="2.5.3.1" />
       <dependency id="xsltproc" />
       <dependency id="nodejs" version="11.3.0" />
       <dependency id="plantuml" />
@@ -27,8 +27,6 @@
       <dependency id="sed" />
       <dependency id="make" />
       <dependency id="gnuwin32-coreutils.portable" />
-      <dependency id="sublimetext3" />
-      <dependency id="openssl.light" />
     </dependencies>
   </metadata>
   <files>
