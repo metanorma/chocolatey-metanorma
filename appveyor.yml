@@ -14,6 +14,7 @@ test_script:
   - git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
   - set PATH=c:\tools\ruby25\bin;%PATH% # make lookup ruby25 before preinstalled one
   - call make -f Makefile.win clean all
+  - choco uninstall metanorma -y
 
 deploy_script:
   - ps: |

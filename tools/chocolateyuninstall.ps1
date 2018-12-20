@@ -1,7 +1,6 @@
-﻿$RubyBin = "c:\tools\ruby25\bin"
+﻿Get-ToolsLocation
+$RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
 
 Write-Host Uninstalling gems...
 
-Push-Location $RubyBin
-gem uninstall metanorma-cli
-Pop-Location
+& $RubyGem\gem.cmd uninstall --all -x metanorma-cli
