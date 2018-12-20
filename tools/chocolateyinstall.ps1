@@ -4,7 +4,6 @@ Set-Content $Env:ChocolateyInstall\bin\xslt-config.bat "@ECHO OFF" -Encoding ASC
 $XsltDist = ${Env:ChocolateyInstall} + "\lib\xsltproc\dist"
 $XsltInclude = $XsltDist + "\include"
 $XsltLib = $XsltDist + "\lib"
-$RubyGem = "c:\tools\ruby25\bin"
 
 Write-Host Installing gems...
 
@@ -12,6 +11,9 @@ Write-Host Installing gems...
 Copy-Item -Force $XsltDist\bin\libxml2-*.dll $XsltDist\bin\libxml2.dll 
 Copy-Item -Force $XsltDist\bin\libxslt-*.dll $XsltDist\bin\libxslt.dll
 Copy-Item -Force $XsltDist\bin\libexslt-*.dll $XsltDist\bin\libexslt.dll
+
+Get-ToolsLocation
+$RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
 
 & $RubyGem\gem.cmd -v
 & $RubyGem\gem.cmd install bundler
