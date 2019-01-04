@@ -1,3 +1,5 @@
+image:https://ci.appveyor.com/api/projects/status/l0i1kvh7o5qfk3ws?svg=true["Build Status", link="https://ci.appveyor.com/project/ribose/chocolatey-metanorma"]
+
 = chocolatey-metanorma: Chocolatey install for Metanorma
 
 
