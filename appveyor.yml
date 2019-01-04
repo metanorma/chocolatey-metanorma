@@ -13,6 +13,7 @@ test_script:
   - metanorma --help
   - git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
   - set PATH=c:\tools\ruby25\bin;%PATH% # make lookup ruby25 before preinstalled one
+  - gem install bundler -v 1.17.3
   - call make -f Makefile.win clean all
   - choco uninstall metanorma -y
 
