@@ -1,4 +1,4 @@
-﻿Set-Content $Env:ChocolateyInstall\bin\xml2-config.bat "@ECHO OFF" -Encoding ASCII
+Set-Content $Env:ChocolateyInstall\bin\xml2-config.bat "@ECHO OFF" -Encoding ASCII
 Set-Content $Env:ChocolateyInstall\bin\xslt-config.bat "@ECHO OFF" -Encoding ASCII
 
 $XsltDist = ${Env:ChocolateyInstall} + "\lib\xsltproc\dist"
@@ -11,6 +11,8 @@ Write-Host Installing gems...
 Copy-Item -Force $XsltDist\bin\libxml2-*.dll $XsltDist\bin\libxml2.dll 
 Copy-Item -Force $XsltDist\bin\libxslt-*.dll $XsltDist\bin\libxslt.dll
 Copy-Item -Force $XsltDist\bin\libexslt-*.dll $XsltDist\bin\libexslt.dll
+
+& npm i -g puppeteer
 
 Get-ToolsLocation
 $RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
