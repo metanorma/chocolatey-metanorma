@@ -64,5 +64,23 @@ choco apikey -k [API_KEY_HERE] -source https://chocolatey.org/`
 choco push metanorma.[version num].nupkg -s https://chocolatey.org/
 ----
 
+== Installation from official repository
+
+[source,sh]
+----
+choco install metanorma -y
+----
+
+or
+
+[source,sh]
+----
+cinst metanorma -y
+----
+
+
+See the https://github.com/chocolatey/choco/wiki/CreatePackagesQuickStart[Chocolatey Packages Quick Start]
+for more information.
+
 See the https://github.com/chocolatey/choco/wiki/CreatePackagesQuickStart[Chocolatey Packages Quick Start]
 for more information.
