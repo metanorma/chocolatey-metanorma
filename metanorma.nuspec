@@ -4,16 +4,16 @@
   <metadata>
     <id>metanorma</id>
     <version>1.1.3</version>
-    <owners>Ribose Inc.</owners>
+    <owners>ribose</owners>
     <title>metanorma</title>
     <authors>Ribose Inc.</authors>
     <projectUrl>https://www.metanorma.com/</projectUrl>
-    <copyright>MIT License</copyright>
+    <copyright>2019 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/riboseinc/metanorma-windows-setup/master/LICENSE.adoc</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/riboseinc/metanorma</projectSourceUrl>
-    <docsUrl>https://www.metanorma.com/overview/getting-started/</docsUrl>
-    <bugTrackerUrl>https://github.com/riboseinc/metanorma/issues</bugTrackerUrl>
+    <projectSourceUrl>https://github.com/riboseinc/chocolatey-metanorma</projectSourceUrl>
+    <docsUrl>https://www.metanorma.com/docs/getting-started/</docsUrl>
+    <bugTrackerUrl>https://github.com/riboseinc/chocolatey-metanorma/issues</bugTrackerUrl>
     <tags>metanorma documentation generator</tags>
     <description><![CDATA[**Metanorma** an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
