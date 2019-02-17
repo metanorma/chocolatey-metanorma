@@ -24,10 +24,6 @@
       <dependency id="xsltproc" />
       <dependency id="nodejs" version="11.3.0" />
       <dependency id="plantuml" />
-      <dependency id="git" />
-      <dependency id="sed" />
-      <dependency id="make" />
-      <dependency id="gnuwin32-coreutils.portable" />
     </dependencies>
   </metadata>
   <files>
