@@ -5,25 +5,29 @@
     <id>metanorma</id>
     <version>1.1.4</version>
     <owners>ribose</owners>
-    <title>metanorma</title>
+    <title>Metanorma</title>
     <authors>Ribose Inc.</authors>
+    <iconUrl>https://open.ribose.com/projects/Metanorma/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.com/</projectUrl>
     <copyright>2019 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/riboseinc/metanorma-windows-setup/master/LICENSE.adoc</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/riboseinc/chocolatey-metanorma</projectSourceUrl>
+    <packageSourceUrl>https://github.com/riboseinc/chocolatey-metanorma</packageSourceUrl>
+    <releaseNotes>https://github.com/riboseinc/metanorma/releases</releaseNotes>
     <docsUrl>https://www.metanorma.com/docs/getting-started/</docsUrl>
     <bugTrackerUrl>https://github.com/riboseinc/chocolatey-metanorma/issues</bugTrackerUrl>
     <tags>metanorma documentation generator</tags>
+    <summary>The standard of standards</summary>
     <description><![CDATA[**Metanorma** an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
  - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.]]></description>
     <dependencies>
-      <dependency id="msys2" />
+      <dependency id="msys2" version="20180531.0.0" />
       <dependency id="ruby" version="(,2.6.0)" />
-      <dependency id="xsltproc" />
+      <dependency id="xsltproc" version="1.1.28.0" />
       <dependency id="nodejs" version="11.3.0" />
-      <dependency id="plantuml" />
+      <dependency id="plantuml" version="1.2018.14" />
     </dependencies>
   </metadata>
   <files>
