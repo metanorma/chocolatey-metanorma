@@ -8,9 +8,9 @@ build_script:
   - choco pack
 
 test_script:
-  - choco install -y msys2 --params "/NoUpdate"
+  # - choco install -y msys2 --params "/NoUpdate"
   - refreshenv
-  - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
+  - choco install metanorma -dv -y -s "'.;https://chocolatey.org/api/v2/'"
   - choco install -y git make gnuwin32-coreutils.portable sed
   - refreshenv
   - metanorma --help
