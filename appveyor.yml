@@ -1,4 +1,5 @@
 version: '{build}'
+image: 'Visual Studio 2017'
 
 environment:
   CHOCO_API_KEY:
@@ -10,14 +11,24 @@ build_script:
 test_script:
   - choco install -y msys2 --params "/NoUpdate"
   - refreshenv
+  #
   - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
   - choco install -y git make gnuwin32-coreutils.portable sed
   - refreshenv
   - metanorma --help
+  #
+  - choco install -y vagrant virtualbox
+  - refreshenv
+  - vagrant plugin install sahara
+  - vagrant up
+  - vagrant sandbox on
+  - vagrant halt
+  #
   - git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
   - set PATH=c:\tools\ruby25\bin;%PATH% # make lookup ruby25 before preinstalled one
   - gem install bundler -v 1.17.3
   - call make -f Makefile.win clean all
+  #
   - choco uninstall metanorma -y
 
 deploy_script:
