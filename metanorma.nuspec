@@ -28,6 +28,7 @@
       <dependency id="xsltproc" version="1.1.28.0" />
       <dependency id="nodejs" version="11.3.0" />
       <dependency id="plantuml" version="1.2018.14" />
+      <dependency id="latexml" version="0.8.3" />
     </dependencies>
   </metadata>
   <files>
