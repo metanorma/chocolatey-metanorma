@@ -3,7 +3,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>metanorma</id>
-    <version>1.1.6</version>
+    <version>1.1.7</version>
     <owners>ribose</owners>
     <title>Metanorma</title>
     <authors>Ribose Inc.</authors>
@@ -25,7 +25,6 @@
     <dependencies>
       <dependency id="msys2" version="20180531.0.0" />
       <dependency id="ruby" version="(,2.6.0)" />
-      <dependency id="xsltproc" version="1.1.28.0" />
       <dependency id="nodejs" version="11.3.0" />
       <dependency id="plantuml" version="1.2018.14" />
       <dependency id="latexml" version="0.8.3" />
