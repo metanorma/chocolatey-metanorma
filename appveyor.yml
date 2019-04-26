@@ -13,10 +13,12 @@ test_script:
   - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
   - choco install -y git make gnuwin32-coreutils.portable sed
   - refreshenv
-  - metanorma --help
+  - metanorma help
   - git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
   - set PATH=c:\tools\ruby25\bin;%PATH% # make lookup ruby25 before preinstalled one
   - gem install bundler -v 1.17.3
+  - bundle update --bundler
+  - bundle update
   - call make -f Makefile.win clean all
   - choco uninstall metanorma -y
 
@@ -35,8 +37,6 @@ deploy_script:
 
 on_finish:
   - ps: Push-AppveyorArtifact C:\ProgramData\chocolatey\logs\chocolatey.log
-  - ps: Push-AppveyorArtifact C:\Tools\ruby25\lib\ruby\gems\2.5.0\extensions\x64-mingw32\2.5.0\ruby-xslt-0.9.10\mkmf.log
-  - ps: Push-AppveyorArtifact C:\Tools\ruby25\lib\ruby\gems\2.5.0\extensions\x64-mingw32\2.5.0\ruby-xslt-0.9.10\gem_make.out
   - 7z a %APPVEYOR_BUILD_FOLDER%\unece-cefact-recommendation-42.zip %APPVEYOR_BUILD_FOLDER%\unece-cefact-recommendation-42\unece-cefact-recommendation-42.*
   - 7z a %APPVEYOR_BUILD_FOLDER%\unece-cefact-recommendation-42.zip %APPVEYOR_BUILD_FOLDER%\unece-cefact-recommendation-42\images
   - 7z a %APPVEYOR_BUILD_FOLDER%\unece-cefact-recommendation-42.zip %APPVEYOR_BUILD_FOLDER%\unece-cefact-recommendation-42\reference-docs
