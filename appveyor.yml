@@ -11,7 +11,6 @@ test_script:
   - choco install -y msys2 --params "/NoUpdate"
   - refreshenv
   - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
-  - choco install -y git make gnuwin32-coreutils.portable sed
   - refreshenv
   - metanorma help
   - git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42

@@ -23,11 +23,16 @@
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
  - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.]]></description>
     <dependencies>
-      <dependency id="msys2" version="20180531.0.0" />
+      <dependency id="msys2" version="[20180531.0.0,)" />
       <dependency id="ruby" version="(,2.6.0)" />
       <dependency id="nodejs" version="11.3.0" />
       <dependency id="plantuml" version="1.2018.14" />
-      <dependency id="latexml" version="0.8.3" />
+      <dependency id="latexml" version="[0.8.3,)" />
+      <dependency id="git" version="[2.5.0,)" />
+      <dependency id="make" version="[4.2.1,)" />
+      <dependency id="gnuwin32-coreutils.portable" version="[5.3.0,)" />
+      <dependency id="sed" version="[4.2.1,)" />
+      <dependency id="grep" version="[2.1032,)" />
     </dependencies>
   </metadata>
   <files>
