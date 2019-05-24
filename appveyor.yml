@@ -9,7 +9,6 @@ build_script:
 
 test_script:
   - choco install -y msys2 --params "/NoUpdate"
-  - refreshenv
   - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
   - refreshenv
   - metanorma help
