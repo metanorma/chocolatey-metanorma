@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Test your packages in a test environment: https://github.com/chocolatey/chocolatey-test-environment -->
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
@@ -23,7 +23,6 @@
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
  - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.]]></description>
     <dependencies>
-      <dependency id="msys2" version="[20180531.0.0,)" />
       <dependency id="ruby" version="(,2.6.0)" />
       <dependency id="nodejs" version="11.3.0" />
       <dependency id="plantuml" version="1.2018.14" />
