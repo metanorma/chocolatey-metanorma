@@ -2,6 +2,14 @@ Write-Host Installing puppeteer...
 
 & npm i -g puppeteer
 
+if (Get-Command "python" -errorAction SilentlyContinue) {
+	Write-Host Installing idnits and xml2rfc...
+	& python -m pip install --upgrade pip
+	& python -m pip install idnits xml2rfc
+} else {
+	Write-Host Skip installing idnits and xml2rfc because no python was found
+}
+
 Write-Host Installing RIDK...
 
 $RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
