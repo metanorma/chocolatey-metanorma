@@ -8,10 +8,13 @@ build_script:
   - choco pack
 
 test_script:
+  - set PYTHON_VERSION=27
+  - set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%
   - choco install -y msys2 --params "/NoUpdate"
   - choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
   - refreshenv
   - metanorma help
+  - where xml2rfc latexmlmath
   - git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
   - set PATH=c:\tools\ruby25\bin;%PATH% # make lookup ruby25 before preinstalled one
   - gem install bundler -v 1.17.3
