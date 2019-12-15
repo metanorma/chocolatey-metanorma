@@ -25,3 +25,6 @@ Write-Host Installing gems...
 
 Write-Host Checking metanorma-cli
 Get-Command metanorma | Select-Object -ExpandProperty Definition
+
+# Add LibreOffice CLI to Path
+$env:Path = "$Env:ProgramFiles\LibreOffice\program;$Env:Path"
