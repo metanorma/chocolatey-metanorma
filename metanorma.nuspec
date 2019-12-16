@@ -34,7 +34,6 @@
       <dependency id="sed" version="[4.2.1,)" />
       <dependency id="grep" version="[2.1032,)" />
       <dependency id="python2" version="[2.7.6,)" />
-      <dependency id="libreoffice-still" version="[6.0.6,)" />
     </dependencies>
   </metadata>
   <files>
