@@ -1,0 +1,72 @@
+name: main
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ '**' ]
+    tags: [ 'v*' ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Build chocolatey package
+        run: |
+          choco pack
+      - uses: actions/upload-artifact@master
+        with:
+          name: nupkg
+          path: metanorma.1.2.8.nupkg
+  test:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/download-artifact@master
+        with:
+          name: nupkg
+      - name: Install chocolatey package
+        shell: cmd
+        run: |
+          # set PYTHON_VERSION=27
+          # set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%
+          choco install -y msys2 --params "/NoUpdate"
+          choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
+          refreshenv
+      - name: Test metanorma & dependencies
+        shell: cmd
+        run: |
+          metanorma help
+          where xml2rfc latexmlmath
+          git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
+          # set PATH=c:\tools\ruby25\bin;%PATH% # make lookup ruby25 before preinstalled one
+          gem install bundler -v 1.17.3
+          bundle update --bundler
+          bundle update
+          call make -f Makefile.win clean all
+      - name: Uninstall chocolatey package
+        shell: pwsh
+        run: |
+          choco uninstall metanorma -y
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/download-artifact@master
+        with:
+          name: nupkg
+      - name: Push to chocolatey
+        shell: pwsh
+        env:
+          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+        run: |
+          $namespaces = @{nuspec = "http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"}
+          $pkgVersion = Select-Xml -Path metanorma.nuspec `
+               -XPath "/nuspec:package/nuspec:metadata/nuspec:version/text()" `
+               -Namespace $namespaces | Select-Object -Expand Node | Select-Object -Expand Data
+          choco apikey -key $Env:CHOCO_API_KEY -source https://chocolatey.org/
+          choco push metanorma.${pkgVersion}.nupkg -source https://chocolatey.org/
