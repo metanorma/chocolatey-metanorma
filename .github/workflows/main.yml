@@ -34,20 +34,19 @@ jobs:
           choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
           refreshenv
       - name: Test metanorma & dependencies
-        shell: pwsh
+        shell: cmd
         run: |
-          refreshenv
-          metanorma help
+          call RefreshEnv.cmd
+          call metanorma help
           where xml2rfc latexmlmath
       - name: Test compilation
-        shell: pwsh
+        shell: cmd
         run: |
-          git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git
+          git clone https://github.com/metanorma/unece-cefact-recommendation-42.git
           cd unece-cefact-recommendation-42
-          gem install bundler -v 1.17.3
-          bundle update --bundler
-          bundle update
-          make -f Makefile.win clean all
+          call gem install bundler
+          call bundle install
+          call make -f Makefile.win clean all SHELL=cmd
       - name: Uninstall chocolatey package
         shell: pwsh
         run: |
