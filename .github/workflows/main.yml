@@ -42,10 +42,9 @@ jobs:
       - name: Test compilation
         shell: pwsh
         run: |
-          git clone https://github.com/riboseinc/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
-          gem install bundler -v 1.17.3
-          bundle update --bundler
-          bundle update
+          git clone https://github.com/metanorma/unece-cefact-recommendation-42.git & cd unece-cefact-recommendation-42
+          gem install bundler
+          bundle install
           make -f Makefile.win clean all
       - name: Uninstall chocolatey package
         shell: pwsh

@@ -10,13 +10,13 @@
     <iconUrl>https://open.ribose.com/projects/Metanorma/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.com/</projectUrl>
     <copyright>2019 Ribose Inc.</copyright>
-    <licenseUrl>https://raw.githubusercontent.com/riboseinc/metanorma-windows-setup/master/LICENSE.adoc</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma-windows-setup/master/LICENSE.adoc</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/riboseinc/chocolatey-metanorma</projectSourceUrl>
-    <packageSourceUrl>https://github.com/riboseinc/chocolatey-metanorma</packageSourceUrl>
-    <releaseNotes>https://github.com/riboseinc/metanorma/releases</releaseNotes>
+    <projectSourceUrl>https://github.com/metanorma/chocolatey-metanorma</projectSourceUrl>
+    <packageSourceUrl>https://github.com/metanorma/chocolatey-metanorma</packageSourceUrl>
+    <releaseNotes>https://github.com/metanorma/metanorma/releases</releaseNotes>
     <docsUrl>https://www.metanorma.com/docs/getting-started/</docsUrl>
-    <bugTrackerUrl>https://github.com/riboseinc/chocolatey-metanorma/issues</bugTrackerUrl>
+    <bugTrackerUrl>https://github.com/metanorma/chocolatey-metanorma/issues</bugTrackerUrl>
     <tags>metanorma documentation generator</tags>
     <summary>The standard of standards</summary>
     <description><![CDATA[**Metanorma** an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
