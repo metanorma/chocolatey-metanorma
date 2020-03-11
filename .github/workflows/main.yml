@@ -3,9 +3,8 @@ name: main
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ '**' ]
     tags: [ 'v*' ]
+  pull_request:
 
 jobs:
   build:
@@ -13,12 +12,17 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Build chocolatey package
+        run: choco pack
+      - name: Find package path
+        id: findnupkg
+        shell: cmd
         run: |
-          choco pack
+          FOR /F "tokens=*" %%g IN ('powershell -noprofile "ls metanorma.*.nupkg | ForEach-Object {$_.FullName}"') do (SET NUPKG=%%g)
+          echo ##[set-output name=nupkg;]%NUPKG%
       - uses: actions/upload-artifact@master
         with:
           name: nupkg
-          path: metanorma.1.2.10.1.nupkg
+          path: ${{ steps.findnupkg.outputs.nupkg }}
   test:
     runs-on: windows-latest
     needs: build
@@ -63,7 +67,7 @@ jobs:
       - name: Push to chocolatey
         shell: pwsh
         env:
-          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+          CHOCO_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
         run: |
           $namespaces = @{nuspec = "http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"}
           $pkgVersion = Select-Xml -Path metanorma.nuspec `
