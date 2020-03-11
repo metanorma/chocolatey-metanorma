@@ -18,7 +18,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: nupkg
-          path: metanorma.1.2.8.nupkg
+          path: metanorma.1.2.10.1.nupkg
   test:
     runs-on: windows-latest
     needs: build
