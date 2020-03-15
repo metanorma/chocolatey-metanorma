@@ -35,8 +35,8 @@ jobs:
         shell: cmd
         run: |
           move nupkg\*.nupkg .\
-          choco install -y msys2 --params "/NoUpdate"
-          choco install metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
+          choco install --no-progress -y msys2 --params "/NoUpdate"
+          choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
           refreshenv
       - name: Test metanorma & dependencies
         shell: cmd
