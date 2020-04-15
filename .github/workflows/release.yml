@@ -1,0 +1,39 @@
+name: release
+
+on: [repository_dispatch]
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-18.04
+    if: startsWith(github.event.client_payload.ref, 'refs/tags/v')
+    steps:
+    - uses: actions/checkout@v1
+    - name: Add writable remote
+      run: |
+        git remote add github "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+        git pull github ${GITHUB_REF} --ff-only
+    - name: Install xmllint
+      run: |
+        sudo apt-get install -y libxml2-utils
+    - name: Parse metanorma-cli version
+      env:
+        METANORMA_CLI_TAG: ${{ github.event.client_payload.ref }}
+      run: |
+        echo "::set-env name=METANORMA_CLI_VERSION::${METANORMA_CLI_TAG#*/v}"
+    - name: Update metanorma.nuspec
+      env:
+        METANORMA_CLI_TAG: ${{ github.event.client_payload.ref }}
+      run: |
+        xmllint --shell metanorma.nuspec << EOF
+        setns ns=http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd
+        cd /ns:package/ns:metadata/ns:version
+        set ${METANORMA_CLI_VERSION}
+        save
+        exit
+        EOF
+    - name: Push commit and tag
+      run: |
+        git add metanorma.nuspec
+        git commit -m "Bump version to ${METANORMA_CLI_VERSION}"
+        git tag v${METANORMA_CLI_VERSION}
+        git push github HEAD:${GITHUB_REF} --tags
