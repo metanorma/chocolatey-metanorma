@@ -1,6 +1,8 @@
 name: release
 
-on: [repository_dispatch]
+on:
+  repository_dispatch:
+    types: [ metanorma/metanorma-cli ]
 
 jobs:
   build_linux:
