@@ -1,6 +1,6 @@
 Write-Host Installing puppeteer...
 
-& npm i -g puppeteer
+& npm i -g puppeteer@3.0.2
 
 if (Get-Command "python" -errorAction SilentlyContinue) {
 	Write-Host Installing idnits and xml2rfc...
