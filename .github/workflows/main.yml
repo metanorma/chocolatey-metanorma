@@ -62,7 +62,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@master
-      - uses: actions/download-artifact@master
+      - uses: actions/download-artifact@v2
         with:
           name: nupkg
       - name: Push to chocolatey
@@ -70,7 +70,6 @@ jobs:
         env:
           CHOCO_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
         run: |
-          Move-Item nupkg\*.nupkg .\
           $namespaces = @{nuspec = "http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"}
           $pkgVersion = Select-Xml -Path metanorma.nuspec `
                -XPath "/nuspec:package/nuspec:metadata/nuspec:version/text()" `
