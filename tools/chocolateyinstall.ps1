@@ -39,3 +39,10 @@ $RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
 
 Write-Host Checking metanorma-cli
 Get-Command metanorma | Select-Object -ExpandProperty Definition
+
+Write-Host Setup metanorma
+& metanorma setup --agree-to-terms
+
+if (!$?) {
+	Write-Warning "Command `metanorma setup` finished with errors. Please execute it again before the first `metanorma` run"
+}
