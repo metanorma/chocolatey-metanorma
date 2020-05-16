@@ -42,7 +42,7 @@ Update-SessionEnvironment
 Write-Host Installing gems...
 
 & $RubyGem\gem.cmd install bundler
-& $RubyGem\gem.cmd install metanorma-cli -v 1.2.12
+& $RubyGem\gem.cmd install metanorma-cli -v $Env:ChocolateyPackageVersion
 
 Write-Host Checking metanorma-cli
 Get-Command metanorma | Select-Object -ExpandProperty Definition
