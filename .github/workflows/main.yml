@@ -41,9 +41,9 @@ jobs:
       - name: Test metanorma & dependencies
         shell: cmd
         run: |
-          call RefreshEnv.cmd
-          call metanorma help
           where xml2rfc latexmlmath
+          where metanorma
+          metanorma help
       - name: Test compilation
         shell: cmd
         run: |
