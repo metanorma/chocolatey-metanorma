@@ -35,7 +35,6 @@ jobs:
         shell: cmd
         run: |
           move nupkg\*.nupkg .\
-          choco install --no-progress -y msys2 --params "/NoUpdate"
           choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
           refreshenv
       - name: Test metanorma & dependencies
@@ -48,11 +47,11 @@ jobs:
       - name: Test compilation
         shell: cmd
         run: |
-          git clone https://github.com/metanorma/unece-cefact-recommendation-42.git
-          cd unece-cefact-recommendation-42
-          call gem install bundler
-          call bundle install
-          call make -f Makefile.win clean all SHELL=cmd
+          git clone https://github.com/metanorma/mn-samples-iso.git
+          cd mn-samples-iso
+          gem install relaton-cli
+          cinst --no-progress -y yq
+          call make -f Makefile.win clean all SHELL=cmd SKIP_BUNDLE=true
       - name: Uninstall chocolatey package
         shell: pwsh
         run: |

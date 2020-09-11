@@ -1,7 +1,3 @@
-Write-Host Installing puppeteer...
-
-& npm i -g puppeteer@3.0.2
-
 if (Get-Command "python" -errorAction SilentlyContinue) {
 	Write-Host Installing idnits and xml2rfc...
 	& python -m pip install --upgrade pip
@@ -31,20 +27,13 @@ Get-ChocolateyUnzip -FileFullPath $idnitsArchivePath -Destination $packageSandbo
 $idnitsPath = -join($packageSandboxPath, $separator, [System.IO.Path]::GetFileNameWithoutExtension($idnitsArchive))
 Install-ChocolateyPath -PathToInstall $idnitsArchive
 
-Write-Host Installing RIDK...
+Write-Host Installing packed-mn...
 
-$RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
-$RidkProcess = Start-Process -PassThru -FilePath "$RubyGem\ridk.cmd" -ArgumentList "install 2 3"
-# Start-Process prevent Appveyour from hang
-Wait-Process -Id $RidkProcess.Id
-Update-SessionEnvironment
+$metanormaUrl = "https://github.com/metanorma/packed-mn/releases/download/v${Env:ChocolateyPackageVersion}/metanorma-windows-x64.exe"
+$metanormaPath = -join($Env:ChocolateyInstall, $separator, "bin", $separator, "metanorma.exe")
+Invoke-WebRequest -Uri $metanormaUrl -OutFile $metanormaPath
 
-Write-Host Installing gems...
-
-& $RubyGem\gem.cmd install bundler
-& $RubyGem\gem.cmd install metanorma-cli -v $Env:ChocolateyPackageVersion
-
-Write-Host Checking metanorma-cli
+Write-Host Checking metanorma
 Get-Command metanorma | Select-Object -ExpandProperty Definition
 
 Write-Host Setup metanorma
