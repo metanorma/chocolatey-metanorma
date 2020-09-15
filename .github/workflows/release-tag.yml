@@ -2,7 +2,7 @@ name: release-tag
 
 on:
   repository_dispatch:
-    types: [ metanorma/metanorma-cli ]
+    types: [ metanorma/packed-mn ]
 
 jobs:
   push-tag:

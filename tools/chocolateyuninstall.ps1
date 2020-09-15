@@ -1,4 +1,4 @@
 ﻿Write-Host Uninstalling gems...
 
-$RubyGem = "$Env:ChocolateyToolsLocation\ruby25\bin"
-& $RubyGem\gem.cmd uninstall --all -x metanorma-cli
+$metanormaPath = -join($Env:ChocolateyInstall, $separator, "bin", $separator, "metanorma.exe")
+Remove-Item -Path $metanormaPath -Force
