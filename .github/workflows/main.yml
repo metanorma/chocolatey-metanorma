@@ -41,7 +41,7 @@ jobs:
         shell: cmd
         run: |
           call RefreshEnv.cmd
-          where xml2rfc latexmlmath
+          where xml2rfc
           where metanorma
           metanorma help
       - name: Test compilation
