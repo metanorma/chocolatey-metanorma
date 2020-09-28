@@ -47,12 +47,11 @@ jobs:
       - name: Test compilation
         shell: cmd
         run: |
-          gem install relaton-cli
+          call gem install relaton-cli
           cinst --no-progress -y yq
-          set flavors=iso cc gb iec itu ogc un iho nist
-          for %f in (%flavors%) do (
-            git clone https://github.com/metanorma/mn-samples-%f.git
-            pushd mn-samples-%f
+          for %%f in (iso cc gb iec itu ogc un) do (
+            git clone https://github.com/metanorma/mn-samples-%%f.git
+            pushd mn-samples-%%f
             call make -f Makefile.win clean all SHELL=cmd SKIP_BUNDLE=true
             popd
           )
