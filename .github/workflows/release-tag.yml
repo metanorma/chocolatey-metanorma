@@ -23,20 +23,29 @@ jobs:
     - name: Parse metanorma-cli version
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref }}
+      shell: python
       run: |
-        echo "::set-env name=METANORMA_CLI_VERSION::${METANORMA_CLI_TAG#*/v}"
+        import os
+
+        version = os.environ.get("METANORMA_CLI_TAG")[len('refs/tags/v'):]
+        matches = re.search(r"[-\.]*(?P<suffix>[^\d\W]+)$", version)
+
+        if matches:
+          version = version.replace(matches.group(0), f"-{matches.group(1)}")
+
+        print(f"::set-env name=PACKAGE_VERSION::{version}")
     - name: Update metanorma.nuspec
       run: |
         xmllint --shell metanorma.nuspec << EOF
         setns ns=http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd
         cd /ns:package/ns:metadata/ns:version
-        set ${METANORMA_CLI_VERSION}
+        set ${PACKAGE_VERSION}
         save
         exit
         EOF
     - name: Push commit and tag
       run: |
         git add metanorma.nuspec
-        git commit -m "Bump version to ${METANORMA_CLI_VERSION}"
-        git tag v${METANORMA_CLI_VERSION}
+        git commit -m "Bump version to ${PACKAGE_VERSION}"
+        git tag v${PACKAGE_VERSION}
         git push github HEAD:${GITHUB_REF} --tags
