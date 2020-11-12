@@ -26,6 +26,7 @@ jobs:
       shell: python
       run: |
         import os
+        import re
 
         version = os.environ.get("METANORMA_CLI_TAG")[len('refs/tags/v'):]
         matches = re.search(r"[-\.]*(?P<suffix>[^\d\W]+)$", version)
