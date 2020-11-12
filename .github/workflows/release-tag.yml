@@ -31,9 +31,9 @@ jobs:
         matches = re.search(r"[-\.]*(?P<suffix>[^\d\W]+)$", version)
 
         if matches:
-          version = version.replace(matches.group(0), f"-{matches.group(1)}")
+          version = version.replace(matches.group(0), "-{}".format(matches.group(1)))
 
-        print(f"::set-env name=PACKAGE_VERSION::{version}")
+        print("::set-env name=PACKAGE_VERSION::{}".format(version))
     - name: Update metanorma.nuspec
       run: |
         xmllint --shell metanorma.nuspec << EOF
