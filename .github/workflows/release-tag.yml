@@ -34,7 +34,7 @@ jobs:
         if matches:
           version = version.replace(matches.group(0), "-{}".format(matches.group(1)))
 
-        print("::set-env name=PACKAGE_VERSION::{}".format(version))
+        os.system(f"echo PACKAGE_VERSION={version} >> {os.environ['GITHUB_ENV']}")
     - name: Update metanorma.nuspec
       run: |
         xmllint --shell metanorma.nuspec << EOF
