@@ -35,10 +35,3 @@ Invoke-WebRequest -Uri $metanormaUrl -OutFile $metanormaPath
 
 Write-Host Checking metanorma
 Get-Command metanorma | Select-Object -ExpandProperty Definition
-
-Write-Host Setup metanorma
-& metanorma setup --agree-to-terms
-
-if (!$?) {
-	Write-Warning "Command `metanorma setup` finished with errors. Please execute it again before the first `metanorma` run"
-}
