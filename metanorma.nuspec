@@ -23,7 +23,6 @@
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
  - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.]]></description>
     <dependencies>
-      <dependency id="plantuml" version="[1.2018.14,)"/>
       <dependency id="git" version="[2.5.0,)"/>
       <dependency id="python3" version="[3.0.1,)"/>
     </dependencies>
