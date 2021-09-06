@@ -49,7 +49,7 @@ jobs:
           GITHUB_CREDENTIALS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
         shell: cmd
         run: |
-          for %%f in (iso cc gb iec itu ogc un bsi nist) do (
+          for %%f in (iso cc gb iec itu ogc un) do (
             git clone https://%GITHUB_CREDENTIALS%@github.com/metanorma/mn-samples-%%f.git
             pushd mn-samples-%%f
             call rm Gemfile
