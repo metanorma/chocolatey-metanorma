@@ -34,9 +34,12 @@ jobs:
         import os
         import re
 
-        version = os.environ.get("METANORMA_CLI_TAG")[len('refs/tags/v'):]
-        matches = re.search(r"[-\.]*(?P<suffix>[^\d\W]+)$", version)
+        tag_prefix = "refs/tags/v"
+        version = os.environ.get("METANORMA_CLI_TAG")
+        if version.startswith(tag_prefix):
+          version = version[len(tag_prefix):]
 
+        matches = re.search(r"[-\.]*(?P<suffix>[^\d\W]+)$", version)
         if matches:
           version = version.replace(matches.group(0), "-{}".format(matches.group(1)))
 
