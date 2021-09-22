@@ -1,4 +1,4 @@
-# base image must respect execution environment widnows-2019
+# base image must respect execution environment widnows-2019 in .github/workflows/main.yml
 FROM mcr.microsoft.com/windows:1809
 SHELL ["powershell"]
 
@@ -12,11 +12,15 @@ ADD metanorma.*.nupkg .
 RUN choco install --no-progress metanorma -dv -y -s "'.;https://chocolatey.org/api/v2/'"
 
 # metanorma test
-RUN @('iso'; 'cc'; 'gb'; 'iec'; 'itu'; 'ogc'; 'un') | foreach { \
+RUN @('iso'; 'cc'; 'iec'; 'itu'; 'ogc'; 'un') | foreach { \
 	$git_creds = Get-Content C:/ProgramData/Docker/secrets/git_creds -ErrorAction Ignore; \
 	& git clone https://${git_creds}@github.com/metanorma/mn-samples-$_.git; \
 	Push-Location mn-samples-$_; \
 	Remove-Item Gemfile; \
 	& metanorma site generate . -c metanorma.yml --agree-to-terms; \
+	if ($? -eq $false) { \
+	    Write-Host -Background DarkBlue -Foreground Red "metanorma failed"; \
+	    Exit 1; \
+	} \
 	Pop-Location; \
 }
