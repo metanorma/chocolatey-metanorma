@@ -12,14 +12,15 @@ $separator = [IO.Path]::DirectorySeparatorChar
 $packageSandboxPath = -join($env:ChocolateyInstall, $separator, "lib", $separator, "metanorma")
 
 $idnitsBaseUrl = "https://tools.ietf.org/tools/idnits/"
-$idnitsResponse = Invoke-WebRequest -Uri $idnitsBaseUrl -UseBasicParsing
-$idnitsArchive = $idnitsResponse.Links | Where-Object {$_.href -like "idnits-*"} | % { $_.href }
+$idnitsWebPage = -join($packageSandboxPath, $separator, "idnits.html")
+Get-WebFile -Url $idnitsBaseUrl -FileName $idnitsWebPage
+$idnitsArchive = (Get-Content $idnitsWebPage | Select-String -Pattern 'idnits-.*.tgz' -All).Matches[0].Value
 
 $idnitsDownloadUrl = -join($idnitsBaseUrl, $idnitsArchive)
 $idnitsArchivePath = -join($packageSandboxPath, $separator, $idnitsArchive)
-Invoke-WebRequest -Uri $idnitsDownloadUrl -OutFile $idnitsArchivePath
+Get-ChocolateyWebFile -PackageName ${Env:ChocolateyPackageName} -Url $idnitsDownloadUrl -FileFullPath $idnitsArchivePath
 
-Write-Host Show downloaded file 
+Write-Host Show downloaded file
 Get-ChildItem -Path $packageSandboxPath
 
 Get-ChocolateyUnzip -FileFullPath $idnitsArchivePath -Destination $packageSandboxPath
@@ -31,7 +32,7 @@ Write-Host Installing packed-mn...
 
 $metanormaUrl = "https://github.com/metanorma/packed-mn/releases/download/v${Env:ChocolateyPackageVersion}/metanorma-windows-x64.exe"
 $metanormaPath = -join($Env:ChocolateyInstall, $separator, "bin", $separator, "metanorma.exe")
-Invoke-WebRequest -Uri $metanormaUrl -OutFile $metanormaPath
+Get-ChocolateyWebFile -PackageName ${Env:ChocolateyPackageName} -Url $metanormaUrl -FileFullPath $metanormaPath
 
 Write-Host Checking metanorma
 Get-Command metanorma | Select-Object -ExpandProperty Definition

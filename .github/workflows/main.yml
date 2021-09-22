@@ -11,32 +11,42 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@master
-      - name: Build chocolatey package
-        run: choco pack
-      - name: Find package path
-        id: findnupkg
-        shell: cmd
-        run: |
-          FOR /F "tokens=*" %%g IN ('powershell -noprofile "ls metanorma.*.nupkg | ForEach-Object {$_.FullName}"') do (SET NUPKG=%%g)
-          echo ##[set-output name=nupkg;]%NUPKG%
-      - uses: actions/upload-artifact@master
+
+      - run: choco pack
+
+      - uses: actions/upload-artifact@v2
         with:
           name: nupkg
-          path: ${{ steps.findnupkg.outputs.nupkg }}
+          path: metanorma.*.nupkg
+  test-docker:
+    runs-on: windows-2019 # must match to test/Dockerfile image
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: nupkg
+          path: test
+
+      - run: docker build -t metanorma-test .
+        working-directory: test
+
+      - run: docker run -e GIT_CREDS metanorma-test iso cc iec itu ogc un
+        env:
+          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+
   test:
     runs-on: windows-latest
     needs: build
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/download-artifact@master
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
         with:
           name: nupkg
-      - name: Install chocolatey package
-        shell: cmd
-        run: |
-          move nupkg\*.nupkg .\
-          choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
-          refreshenv
+
+      - run: choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
+
       - name: Test metanorma & dependencies
         shell: cmd
         run: |
@@ -44,31 +54,24 @@ jobs:
           where xml2rfc
           where metanorma
           metanorma help
+
       - name: Test compilation
         env:
-          GITHUB_CREDENTIALS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
-        shell: cmd
-        run: |
-          for %%f in (iso cc gb iec itu ogc un) do (
-            git clone https://%GITHUB_CREDENTIALS%@github.com/metanorma/mn-samples-%%f.git
-            pushd mn-samples-%%f
-            call rm Gemfile
-            call metanorma site generate . -c metanorma.yml --agree-to-terms
-            popd
-          )
-      - name: Uninstall chocolatey package
-        shell: pwsh
-        run: |
-          choco uninstall metanorma -y
+          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+        run: .\test\test.ps1 iso cc iec itu ogc un
+
+      - run: choco uninstall metanorma -y
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     needs: test
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
+
       - uses: actions/download-artifact@v2
         with:
           name: nupkg
+
       - name: Push to chocolatey
         shell: pwsh
         env:

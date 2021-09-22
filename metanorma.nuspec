@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Test your packages in a test environment: https://github.com/chocolatey/chocolatey-test-environment -->
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>metanorma</id>
@@ -9,7 +8,7 @@
     <authors>Ribose Inc.</authors>
     <iconUrl>https://open.ribose.com/projects/Metanorma/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.com/</projectUrl>
-    <copyright>2019 Ribose Inc.</copyright>
+    <copyright>2021 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma-windows-setup/master/LICENSE.adoc</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/metanorma/chocolatey-metanorma</projectSourceUrl>
@@ -25,6 +24,7 @@
     <dependencies>
       <dependency id="git" version="[2.5.0,)"/>
       <dependency id="python3" version="[3.0.1,)"/>
+      <dependency id="javaruntime" version="[8.0.40,)"/>
     </dependencies>
   </metadata>
   <files>
