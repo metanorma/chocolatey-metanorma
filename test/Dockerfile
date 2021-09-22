@@ -9,18 +9,11 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
 
 # metanorma install
 ADD metanorma.*.nupkg .
+ADD test.ps1 .
 RUN choco install --no-progress metanorma -dv -y -s "'.;https://chocolatey.org/api/v2/'"
 
 # metanorma test
-RUN @('iso'; 'cc'; 'iec'; 'itu'; 'ogc'; 'un') | foreach { \
-	$git_creds = Get-Content C:/ProgramData/Docker/secrets/git_creds -ErrorAction Ignore; \
-	& git clone https://${git_creds}@github.com/metanorma/mn-samples-$_.git; \
-	Push-Location mn-samples-$_; \
-	Remove-Item Gemfile; \
-	& metanorma site generate . -c metanorma.yml --agree-to-terms; \
-	if ($? -eq $false) { \
-	    Write-Host -Background DarkBlue -Foreground Red "metanorma failed"; \
-	    Exit 1; \
-	} \
-	Pop-Location; \
-}
+# ideally this should be separate step but to not polute Dockerfile with workdorund
+# https://stackoverflow.com/questions/65104246/how-to-install-powershell-core-in-aspnet-nanoserver-docker-container
+# I decided to keep it in Dockerfile
+RUN powershell -ExecutionPolicy Bypass -File test.ps1 "iso cc iec itu ogc un"

@@ -29,26 +29,21 @@ jobs:
           name: nupkg
           path: test
 
-      - run: docker build -t metanorma-test -f Dockerfile --secret id=GIT_CREDENTIALS,target=git_creds .
-        env:
-          GIT_CREDENTIALS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+      - run: docker build -t metanorma-test --secret=GIT_CREDS .
         working-directory: test
+        env:
+          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+
   test:
     runs-on: windows-latest
     needs: build
-    if: ${{ false }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
           name: nupkg
 
-      - name: Install chocolatey package
-        shell: cmd
-        run: |
-          move nupkg\*.nupkg .\
-          choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
-          refreshenv
+      - run: choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
 
       - name: Test metanorma & dependencies
         shell: cmd
@@ -60,20 +55,10 @@ jobs:
 
       - name: Test compilation
         env:
-          GITHUB_CREDENTIALS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
-        shell: cmd
-        run: |
-          for %%f in (iso cc gb iec itu ogc un) do (
-            git clone https://%GITHUB_CREDENTIALS%@github.com/metanorma/mn-samples-%%f.git
-            pushd mn-samples-%%f
-            call rm Gemfile
-            call metanorma site generate . -c metanorma.yml --agree-to-terms
-            popd
-          )
+          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+        run: .\test\test.ps1 "iso cc iec itu ogc un"
 
-      - name: Uninstall chocolatey package
-        shell: pwsh
-        run: choco uninstall metanorma -y
+      - run: choco uninstall metanorma -y
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
