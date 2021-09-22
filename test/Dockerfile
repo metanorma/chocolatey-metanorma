@@ -9,7 +9,7 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
 
 # metanorma install
 ADD metanorma.*.nupkg .
-RUN choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
+RUN choco install --no-progress metanorma -dv -y -s "'.;https://chocolatey.org/api/v2/'"
 
 # metanorma test
 RUN @('iso'; 'cc'; 'gb'; 'iec'; 'itu'; 'ogc'; 'un') | foreach { \
