@@ -1,4 +1,6 @@
+# base image must respect execution environment widnows-2019
 FROM mcr.microsoft.com/windows:1809
+SHELL ["powershell"]
 
 # https://chocolatey.org/install
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \

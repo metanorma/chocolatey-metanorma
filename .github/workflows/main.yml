@@ -19,7 +19,7 @@ jobs:
           name: nupkg
           path: metanorma.*.nupkg
   test-docker:
-    runs-on: windows-2019
+    runs-on: windows-2019 # must match to test/Dockerfile image
     needs: build
     steps:
       - uses: actions/checkout@v2
