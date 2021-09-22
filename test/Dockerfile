@@ -13,10 +13,10 @@ RUN choco install --no-progress metanorma -dv -y -s "'.;https://chocolatey.org/a
 
 # metanorma test
 RUN @('iso'; 'cc'; 'gb'; 'iec'; 'itu'; 'ogc'; 'un') | foreach { \
-	$git_creds = Get-Content C:/ProgramData/Docker/secrets/git_creds -ErrorAction Ignore \
-	& git clone https://${git_creds}@github.com/metanorma/mn-samples-$_.git \
-	Push-Location mn-samples-$_ \
-	Remove-Item Gemfile \
-	& metanorma site generate . -c metanorma.yml --agree-to-terms \
-	Pop-Location \
+	$git_creds = Get-Content C:/ProgramData/Docker/secrets/git_creds -ErrorAction Ignore; \
+	& git clone https://${git_creds}@github.com/metanorma/mn-samples-$_.git; \
+	Push-Location mn-samples-$_; \
+	Remove-Item Gemfile; \
+	& metanorma site generate . -c metanorma.yml --agree-to-terms; \
+	Pop-Location; \
 }
