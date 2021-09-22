@@ -1,4 +1,4 @@
-for %%f in (iso cc gb iec itu ogc un) do (
+for %%f in (%*) do (
     git clone -–recurse-submodules https://%GIT_CREDS%@github.com/metanorma/mn-samples-%%f.git
     pushd mn-samples-%%f
     call rm Gemfile

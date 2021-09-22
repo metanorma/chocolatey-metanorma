@@ -12,8 +12,5 @@ ADD metanorma.*.nupkg .
 ADD test.ps1 .
 RUN choco install --no-progress metanorma -dv -y -s "'.;https://chocolatey.org/api/v2/'"
 
-# metanorma test
-# ideally this should be separate step but to not polute Dockerfile with workdorund
-# https://stackoverflow.com/questions/65104246/how-to-install-powershell-core-in-aspnet-nanoserver-docker-container
-# I decided to keep it in Dockerfile
-RUN powershell -ExecutionPolicy Bypass -File test.ps1 "iso cc iec itu ogc un"
+ENTRYPOINT ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", "test.ps1"]
+CMD ["iso", "cc", "iec", "itu", "ogc", "un"]
