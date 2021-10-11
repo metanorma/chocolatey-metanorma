@@ -47,18 +47,19 @@ jobs:
 
       - run: choco install --no-progress metanorma -dv -s "'.;https://chocolatey.org/api/v2/'"
 
-      - name: Test metanorma & dependencies
+      - name: Test dependencies
         shell: cmd
         run: |
           call RefreshEnv.cmd
           where xml2rfc
           where metanorma
-          metanorma help
+          where dot
 
-      - name: Test compilation
+      - run: metanorma help
+
+      - run: .\test\test.ps1 iso cc iec itu ogc un
         env:
           GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
-        run: .\test\test.ps1 iso cc iec itu ogc un
 
       - run: choco uninstall metanorma -y
   publish:
