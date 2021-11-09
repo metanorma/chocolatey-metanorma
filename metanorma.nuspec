@@ -7,14 +7,14 @@
     <title>Metanorma</title>
     <authors>Ribose Inc.</authors>
     <iconUrl>https://raw.githubusercontent.com/metanorma/metanorma.org/main/assets/symbol.svg</iconUrl>
-    <projectUrl>https://www.metanorma.com/</projectUrl>
+    <projectUrl>https://www.metanorma.org/</projectUrl>
     <copyright>2021 Ribose Inc.</copyright>
-    <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma-windows-setup/master/LICENSE.adoc</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma/main/LICENSE.txt</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/metanorma/chocolatey-metanorma</projectSourceUrl>
+    <projectSourceUrl>https://github.com/metanorma/packed-mn</projectSourceUrl>
     <packageSourceUrl>https://github.com/metanorma/chocolatey-metanorma</packageSourceUrl>
     <releaseNotes>https://github.com/metanorma/metanorma/releases</releaseNotes>
-    <docsUrl>https://www.metanorma.com/docs/getting-started/</docsUrl>
+    <docsUrl>https://www.metanorma.org/author/getting-started/</docsUrl>
     <bugTrackerUrl>https://github.com/metanorma/chocolatey-metanorma/issues</bugTrackerUrl>
     <tags>metanorma documentation generator</tags>
     <summary>The standard of standards</summary>
