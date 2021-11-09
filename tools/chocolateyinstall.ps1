@@ -8,7 +8,7 @@ if (Get-Command "python" -errorAction SilentlyContinue) {
 
 Write-Host Installing packed-mn...
 
-$metanormaUrl = "https://github.com/metanorma/packed-mn/releases/download/v1.5.1/metanorma-windows-x64.exe"
+$metanormaUrl = "https://github.com/metanorma/packed-mn/releases/download/v${Env:ChocolateyPackageVersion}/metanorma-windows-x64.exe"
 $separator = [IO.Path]::DirectorySeparatorChar
 $metanormaPath = -join($Env:ChocolateyInstall, $separator, "bin", $separator, "metanorma.exe")
 Get-ChocolateyWebFile -PackageName ${Env:ChocolateyPackageName} -Url $metanormaUrl -FileFullPath $metanormaPath
