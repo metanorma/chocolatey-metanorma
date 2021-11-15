@@ -20,7 +20,13 @@
     <summary>The standard of standards</summary>
     <description><![CDATA[**Metanorma** an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
  - Build tools for authoring standards and formatting them in accordance with your organization’s practices
- - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.]]></description>
+ - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.
+
+ ## VirusTotal results
+
+ Research about [high detections from VirusTotal](https://github.com/metanorma/chocolatey-metanorma/issues/61#issuecomment-968661076)
+
+  We constantly recheck VirusTotal reports and can confirm that reported issues are false-positive]]></description>
     <dependencies>
       <dependency id="git" version="[2.5.0,)"/>
       <dependency id="python3" version="[3.0.1,)"/>
