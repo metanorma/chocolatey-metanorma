@@ -20,8 +20,3 @@ $packageArgs = @{
   ChecksumType = 'sha256'
 }
 Get-ChocolateyWebFile @packageArgs
-
-Install-BinFile 'metanorma' "$exePath"
-
-Write-Host Checking metanorma
-Get-Command metanorma | Select-Object -ExpandProperty Definition
