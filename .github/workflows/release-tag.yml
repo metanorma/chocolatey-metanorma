@@ -15,17 +15,20 @@ jobs:
   push-tag:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+
     - name: Add writable remote
       run: |
         git config --global user.name "metanorma-ci"
         git config --global user.email "metanorma-ci@users.noreply.github.com"
-        git remote add github "https://metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}@github.com/$GITHUB_REPOSITORY.git"
-        git pull github ${GITHUB_REF} --ff-only
+
     - name: Install xmllint
       run: |
         sudo apt-get update -y
         sudo apt-get install -y libxml2-utils
+
     - name: Parse metanorma-cli version
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
@@ -45,6 +48,7 @@ jobs:
 
         github_env = os.getenv('GITHUB_ENV', os.devnull)
         os.system("echo PACKAGE_VERSION={} >> {}".format(version, github_env))
+
     - name: Update metanorma.nuspec
       run: |
         xmllint --shell metanorma.nuspec << EOF
@@ -54,9 +58,15 @@ jobs:
         save
         exit
         EOF
+
+    - name: Update sha256
+      run: |
+        curl -s "https://github.com/metanorma/packed-mn/releases/download/v${PACKAGE_VERSION}/metanorma-windows-x64.exe" | sha256sum | cut -d ' ' -f 1 > tools/metanorma.sha256
+
     - name: Push commit and tag
       run: |
         git add metanorma.nuspec
+        git add tools/metanorma.sha256
         git commit -m "Bump version to ${PACKAGE_VERSION}"
         git tag v${PACKAGE_VERSION}
-        git push github HEAD:${GITHUB_REF} --tags
+        git push origin HEAD:${GITHUB_REF} --tags
