@@ -8,10 +8,20 @@ if (Get-Command "python" -errorAction SilentlyContinue) {
 
 Write-Host Installing packed-mn...
 
-$metanormaUrl = "https://github.com/metanorma/packed-mn/releases/download/v1.5.1/metanorma-windows-x64.exe"
-$separator = [IO.Path]::DirectorySeparatorChar
-$metanormaPath = -join($Env:ChocolateyInstall, $separator, "bin", $separator, "metanorma.exe")
-Get-ChocolateyWebFile -PackageName ${Env:ChocolateyPackageName} -Url $metanormaUrl -FileFullPath $metanormaPath
+$toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$exePath  = Join-Path $toolsDir "metanorma.exe"
+$checksum = Get-Content "$toolsPath\metanorma.sha256" -Head 1
+
+$packageArgs = @{
+  PackageName  = 'metanorma'
+  Url          = "https://github.com/metanorma/packed-mn/releases/download/v${Env:ChocolateyPackageVersion}/metanorma-windows-x64.exe"
+  FileFullPath = "$exePath"
+  Checksum     = "$checksum"
+  ChecksumType = 'sha256'
+}
+Get-ChocolateyWebFile @packageArgs
+
+Install-BinFile 'metanorma' "$exePath"
 
 Write-Host Checking metanorma
 Get-Command metanorma | Select-Object -ExpandProperty Definition
