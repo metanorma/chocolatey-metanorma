@@ -6,7 +6,7 @@
     <owners>ribose</owners>
     <title>Metanorma</title>
     <authors>Ribose Inc.</authors>
-    <iconUrl>https://raw.githubusercontent.com/metanorma/metanorma.org/main/assets/symbol.svg</iconUrl>
+    <iconUrl>https://cdn.statically.io/gh/metanorma/metanorma.org/main/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.org/</projectUrl>
     <copyright>2021 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma/main/LICENSE.txt</licenseUrl>
