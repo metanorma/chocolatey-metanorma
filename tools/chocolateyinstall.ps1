@@ -14,7 +14,7 @@ $checksum = Get-Content "$toolsPath\metanorma.sha256" -Head 1
 
 $packageArgs = @{
   PackageName  = 'metanorma'
-  Url          = "https://github.com/metanorma/packed-mn/releases/download/v$($Env:ChocolateyPackageVersion -replace '-')/metanorma-windows-x64.exe"
+  Url          = "https://github.com/metanorma/packed-mn/releases/download/v$($Env:ChocolateyPackageVersion -replace '-')/metanorma-windows-x86_64.exe"
   FileFullPath = "$exePath"
   Checksum     = "$checksum"
   ChecksumType = 'sha256'
