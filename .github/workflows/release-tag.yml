@@ -38,7 +38,7 @@ jobs:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
       run: |
         curl -LO --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/main/gemver-to-semver.rb && chmod +x gemver-to-semver.rb
-        echo "PACKAGE_VERSION=$(./gemver-to-semver.rb ${METANORMA_CLI_TAG})" >> $GITHUB_ENV
+        echo "PACKAGE_VERSION=$(./gemver-to-semver.rb --chocolatey ${METANORMA_CLI_TAG})" >> $GITHUB_ENV
 
     - name: Update metanorma.nuspec
       run: |
