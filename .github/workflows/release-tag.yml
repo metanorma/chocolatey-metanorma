@@ -29,25 +29,16 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y libxml2-utils
 
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1'
+
     - name: Parse metanorma-cli version
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
-      shell: python
       run: |
-        import os
-        import re
-
-        tag_prefix = "refs/tags/v"
-        version = os.environ.get("METANORMA_CLI_TAG")
-        if version.startswith(tag_prefix):
-          version = version[len(tag_prefix):]
-
-        matches = re.search(r"[-\.]*(?P<suffix>[^\d\W]+)$", version)
-        if matches:
-          version = version.replace(matches.group(0), "-{}".format(matches.group(1)))
-
-        github_env = os.getenv('GITHUB_ENV', os.devnull)
-        os.system("echo PACKAGE_VERSION={} >> {}".format(version, github_env))
+        curl -LO --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/main/gemver-to-semver.rb && chmod +x gemver-to-semver.rb
+        echo "PACKAGE_VERSION=$(./gemver-to-semver.rb ${METANORMA_CLI_TAG})" >> $GITHUB_ENV
 
     - name: Update metanorma.nuspec
       run: |
