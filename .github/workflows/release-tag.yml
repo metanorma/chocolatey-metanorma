@@ -50,14 +50,19 @@ jobs:
         exit
         EOF
 
-    - name: Update sha256
+    - name: Prepare URL and SHA256 files
+      env:
+        METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
       run: |
-        curl -s "https://github.com/metanorma/packed-mn/releases/download/v${PACKAGE_VERSION}/metanorma-windows-x64.exe" | sha256sum | cut -d ' ' -f 1 > tools/metanorma.sha256
+        METANORMA_EXE_URL="https://github.com/metanorma/packed-mn/releases/download/v${METANORMA_CLI_TAG#*/v}/metanorma-windows-x86_64.exe"
+        echo "${METANORMA_EXE_URL}" > tools/metanorma.url.txt
+        curl -s "${METANORMA_EXE_URL}" | sha256sum | cut -d ' ' -f 1 > tools/metanorma.sha256.txt
 
     - name: Push commit and tag
       run: |
         git add metanorma.nuspec
-        git add tools/metanorma.sha256
+        git add tools/metanorma.sha256.txt
+        git add tools/metanorma.url.txt
         git commit -m "Bump version to ${PACKAGE_VERSION}"
         git tag v${PACKAGE_VERSION}
         git push origin HEAD:${GITHUB_REF} --tags
