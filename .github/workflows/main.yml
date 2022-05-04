@@ -45,7 +45,7 @@ jobs:
         with:
           name: nupkg
 
-      - run: choco install --no-progress metanorma -dv -s "'.;https://community.chocolatey.org/api/v2/'"
+      - run: choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'"
 
       - name: Test dependencies
         shell: cmd

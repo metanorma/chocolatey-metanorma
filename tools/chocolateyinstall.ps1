@@ -10,8 +10,9 @@ Write-Host Installing packed-mn...
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $exePath  = Join-Path $toolsDir "metanorma.exe"
-$exeChecksum = Get-Content "$toolsPath\metanorma.sha256.txt" -Head 1
-$exeUrl = Get-Content "$toolsPath\metanorma.url.txt" -Head 1
+$pkgTools = "$($Env:ChocolateyInstall)/lib/metanorma/tools"
+$exeChecksum = Get-Content "$pkgTools\metanorma.sha256.txt" -Head 1
+$exeUrl = Get-Content "$pkgTools\metanorma.url.txt" -Head 1
 
 $packageArgs = @{
   PackageName  = 'metanorma'
