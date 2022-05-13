@@ -1,9 +1,9 @@
 if (Get-Command "python" -errorAction SilentlyContinue) {
-	Write-Host Installing idnits and xml2rfc...
+	Write-Host Installing xml2rfc...
 	& python -m pip install --upgrade pip
 	& python -m pip install idnits xml2rfc
 } else {
-	Write-Warning Skip installing idnits and xml2rfc because no python was found
+	Write-Warning Skip installing xml2rfc because no python was found
 }
 
 Write-Host Installing packed-mn...
