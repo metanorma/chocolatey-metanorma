@@ -56,7 +56,8 @@ jobs:
       run: |
         METANORMA_EXE_URL="https://github.com/metanorma/packed-mn/releases/download/v${METANORMA_CLI_TAG#*/v}/metanorma-windows-x86_64.exe"
         echo "${METANORMA_EXE_URL}" > tools/metanorma.url.txt
-        curl -s "${METANORMA_EXE_URL}" | sha256sum | cut -d ' ' -f 1 > tools/metanorma.sha256.txt
+        curl -sL "${METANORMA_EXE_URL}" | sha256sum | cut -d ' ' -f 1 > tools/metanorma.sha256.txt
+        echo "Metanorma URL: $(cat tools/metanorma.url.txt) SHA265: $(cat tools/metanorma.sha256.txt)"
 
     - name: Push commit and tag
       run: |
