@@ -2,13 +2,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>metanorma</id>
-    <version>1.5.23</version>
+    <version>1.5.24</version>
     <owners>ribose</owners>
     <title>Metanorma</title>
     <authors>Ribose Inc.</authors>
     <iconUrl>https://cdn.statically.io/gh/metanorma/metanorma.org/main/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.org/</projectUrl>
-    <copyright>2021 Ribose Inc.</copyright>
+    <copyright>2022 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma/main/LICENSE.txt</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/metanorma/packed-mn</projectSourceUrl>
