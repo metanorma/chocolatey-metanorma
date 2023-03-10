@@ -7,24 +7,43 @@ on:
   pull_request:
 
 jobs:
+  build-matrix:
+    name: Matrix
+    uses: metanorma/ci/.github/workflows/build-sample-matrix.yml@main
+    with:
+      smoke: false
+      flavors-only: true
+      public-only: true
+
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - run: choco pack
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: nupkg
           path: metanorma.*.nupkg
+
   test-docker:
     runs-on: windows-2019 # must match to test/Dockerfile image
-    needs: build
-    steps:
-      - uses: actions/checkout@v2
+    needs: [build, build-matrix]
 
-      - uses: actions/download-artifact@v2
+    concurrency:
+      group: 'test-docker-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      cancel-in-progress: true
+
+    continue-on-error: ${{ matrix.flavor.experimental }}
+    strategy:
+      max-parallel: 5
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
         with:
           name: nupkg
           path: test
@@ -32,16 +51,39 @@ jobs:
       - run: docker build -t metanorma-test .
         working-directory: test
 
-      - run: docker run -e GIT_CREDS metanorma-test iso cc iec itu ogc un
+      - run: |
+          echo "call docker run -e GIT_CREDS metanorma-test %*" > ../metanorma.cmd
         env:
           GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
 
+      - name: Fetch samples (${{ matrix.flavor.id }})
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          fetch-depth: 1
+
+      - uses: actions-mn/site-gen@v1
+        with:
+          agree-to-terms: true
+
   test:
     runs-on: windows-latest
-    needs: build
+    needs: [build, build-matrix]
+
+    concurrency:
+      group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      cancel-in-progress: true
+
+    continue-on-error: ${{ matrix.flavor.experimental }}
+    strategy:
+      max-parallel: 5
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: nupkg
 
@@ -55,21 +97,28 @@ jobs:
           where metanorma
           where dot
 
-      - run: metanorma help
+      - name: Fetch samples (${{ matrix.flavor.id }})
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          fetch-depth: 1
 
-      - run: .\test\test.ps1 iso cc iec itu ogc un
-        env:
-          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+      - uses: actions-mn/site-gen@v1
+        with:
+          agree-to-terms: true
 
       - run: choco uninstall metanorma -y
+
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: nupkg
 
