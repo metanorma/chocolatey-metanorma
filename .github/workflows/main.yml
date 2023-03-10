@@ -27,9 +27,31 @@ jobs:
           name: nupkg
           path: metanorma.*.nupkg
 
+  build-docker:
+    runs-on: windows-2019 # must match to test/Dockerfile image
+    needs: [build]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: nupkg
+          path: test
+
+      - run: docker build -t metanorma-docker-test .
+        working-directory: test
+
+      - run: docker save --output="metanorma-docker-test.tar" metanorma-docker-test
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: docker-test
+          path: metanorma-docker-test.tar
+
   test-docker:
     runs-on: windows-2019 # must match to test/Dockerfile image
-    needs: [build, build-matrix]
+    needs: [build-docker, build-matrix]
 
     concurrency:
       group: 'test-docker-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
@@ -41,20 +63,16 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
     steps:
-      - uses: actions/checkout@v3
-
       - uses: actions/download-artifact@v3
         with:
-          name: nupkg
-          path: test
+          name: docker-test
 
-      - run: docker build -t metanorma-test .
-        working-directory: test
+      - run: docker load --input metanorma-docker-test.tar
 
       - run: |
-          echo "call docker run -e GIT_CREDS metanorma-test %*" > ../metanorma.cmd
-        env:
-          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+          echo "#!/bin/bash" > ../metanorma
+          echo "docker run metanorma-docker-test metanorma $@" >> ../metanorma
+          chmod +x ../metanorma
 
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v3
@@ -73,7 +91,7 @@ jobs:
     needs: [build, build-matrix]
 
     concurrency:
-      group: '${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      group: 'test-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
       cancel-in-progress: true
 
     continue-on-error: ${{ matrix.flavor.experimental }}
@@ -88,14 +106,6 @@ jobs:
           name: nupkg
 
       - run: choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'"
-
-      - name: Test dependencies
-        shell: cmd
-        run: |
-          call RefreshEnv.cmd
-          where xml2rfc
-          where metanorma
-          where dot
 
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v3
