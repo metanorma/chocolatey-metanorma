@@ -12,4 +12,3 @@ ADD metanorma.*.nupkg .
 RUN choco install --no-progress metanorma -dv -y -s "'.;https://chocolatey.org/api/v2/'"
 
 ENTRYPOINT ["powershell.exe", "-ExecutionPolicy", "Bypass"]
-CMD ["metanorma"]
