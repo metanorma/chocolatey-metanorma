@@ -7,69 +7,120 @@ on:
   pull_request:
 
 jobs:
+  build-matrix:
+    name: Matrix
+    uses: metanorma/ci/.github/workflows/build-sample-matrix.yml@main
+    with:
+      smoke: false
+      flavors-only: true
+      public-only: true
+
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - run: choco pack
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: nupkg
           path: metanorma.*.nupkg
+
   test-docker:
     runs-on: windows-2019 # must match to test/Dockerfile image
-    needs: build
-    steps:
-      - uses: actions/checkout@v2
+    needs: [build, build-matrix]
 
-      - uses: actions/download-artifact@v2
+    concurrency:
+      group: 'test-docker-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      cancel-in-progress: true
+
+    continue-on-error: ${{ matrix.flavor.experimental }}
+    strategy:
+      max-parallel: 5
+      fail-fast: true
+      matrix: # ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
+        flavor: # https://github.com/metanorma/chocolatey-metanorma/issues/73
+          - id: iso
+            experimental: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
         with:
           name: nupkg
           path: test
 
-      - run: docker build -t metanorma-test .
+      # unfortunatelly windows docker image too big to prebuild it once
+      - run: docker build -t metanorma-docker-test .
         working-directory: test
 
-      - run: docker run -e GIT_CREDS metanorma-test iso cc iec itu ogc un
-        env:
-          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+      - run: docker image inspect metanorma-docker-test
+
+      - run: |
+          echo "call docker run metanorma-docker-test metanorma %*" > ./metanorma.cmd
+          chmod +x ./metanorma.cmd
+          echo "$(pwd)" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Fetch samples (${{ matrix.flavor.id }})
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
+          path: ${{ matrix.flavor.id }}
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          fetch-depth: 1
+
+      - uses: actions-mn/site-gen@v1
+        with:
+          agree-to-terms: true
+          source-path: ${{ matrix.flavor.id }}
 
   test:
     runs-on: windows-latest
-    needs: build
+    needs: [build, build-matrix]
+
+    concurrency:
+      group: 'test-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
+      cancel-in-progress: true
+
+    continue-on-error: ${{ matrix.flavor.experimental }}
+    strategy:
+      max-parallel: 5
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: nupkg
 
       - run: choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'"
 
-      - name: Test dependencies
-        shell: cmd
-        run: |
-          call RefreshEnv.cmd
-          where xml2rfc
-          where metanorma
-          where dot
+      - name: Fetch samples (${{ matrix.flavor.id }})
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
+          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+          fetch-depth: 1
 
-      - run: metanorma help
-
-      - run: .\test\test.ps1 iso cc iec itu ogc un
-        env:
-          GIT_CREDS: "metanorma-ci:${{ secrets.METANORMA_CI_PAT_TOKEN }}"
+      - uses: actions-mn/site-gen@v1
+        with:
+          agree-to-terms: true
 
       - run: choco uninstall metanorma -y
+
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     needs: test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: nupkg
 
