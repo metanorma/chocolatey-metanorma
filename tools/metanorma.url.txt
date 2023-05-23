@@ -1,1 +1,1 @@
-https://github.com/metanorma/packed-mn/releases/download/v1.7.1/metanorma-windows-x86_64.exe
+https://github.com/metanorma/packed-mn/releases/download/v1.7.2pre1/metanorma-windows-x86_64.exe
