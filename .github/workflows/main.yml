@@ -97,7 +97,17 @@ jobs:
         with:
           name: nupkg
 
-      - run: choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'"
+      # workaround for https://github.com/chocolatey/choco/issues/1691
+      - run: |
+          if ! choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'" > choco.install.log 2>&1; then
+            if grep -q "git\.install \(exited 1\)" choco.install.log; then
+              echo "Git installation failed. Ignoring the error."
+              exit 0
+            else
+              exit 1
+            fi
+          fi
+        shell: bash
 
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v3
