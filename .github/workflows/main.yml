@@ -102,7 +102,7 @@ jobs:
           set +e
           if ! choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'" > choco.install.log 2>&1; then
             cat choco.install.log
-            if grep -q "git\.install \(exited 1\)" choco.install.log; then
+            if grep -q " - git\.install (exited 1)" choco.install.log; then
               echo "Git installation failed. Ignoring the error."
               exit 0
             else
