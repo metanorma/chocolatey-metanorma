@@ -99,7 +99,9 @@ jobs:
 
       # workaround for https://github.com/chocolatey/choco/issues/1691
       - run: |
+          set +e
           if ! choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'" > choco.install.log 2>&1; then
+            cat choco.install.log
             if grep -q "git\.install \(exited 1\)" choco.install.log; then
               echo "Git installation failed. Ignoring the error."
               exit 0
