@@ -86,7 +86,7 @@ jobs:
       group: 'test-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
       cancel-in-progress: true
 
-    continue-on-error: ${{ matrix.flavor.experimental }}
+    continue-on-error: ${{ matrix.flavor.experimental || matrix.flavor.id == 'ietf' }} # https://github.com/metanorma/chocolatey-metanorma/issues/78
     strategy:
       max-parallel: 5
       fail-fast: false
