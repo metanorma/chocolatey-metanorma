@@ -73,7 +73,7 @@ jobs:
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 
-      - uses: actions-mn/site-gen@v1
+      - uses: actions-mn/site-gen@main
         with:
           agree-to-terms: true
           source-path: ${{ matrix.flavor.id }}
@@ -119,7 +119,7 @@ jobs:
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 
-      - uses: actions-mn/site-gen@v1
+      - uses: actions-mn/site-gen@main
         with:
           agree-to-terms: true
 
