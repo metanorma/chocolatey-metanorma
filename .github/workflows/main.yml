@@ -104,6 +104,7 @@ jobs:
             cat choco.install.log
             if grep -q " - git\.install (exited 1)" choco.install.log; then
               echo "Git installation failed. Ignoring the error."
+              choco install --skip-dependencies --no-progress -pre metanorma -dv -s "'.;chocolatey'"
               exit 0
             else
               exit 1
