@@ -8,7 +8,7 @@
     <authors>Ribose Inc.</authors>
     <iconUrl>https://cdn.statically.io/gh/metanorma/metanorma.org/main/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.org/</projectUrl>
-    <copyright>2022 Ribose Inc.</copyright>
+    <copyright>2025 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma/main/LICENSE.txt</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/metanorma/packed-mn</projectSourceUrl>
@@ -16,11 +16,9 @@
     <releaseNotes>https://github.com/metanorma/metanorma/releases</releaseNotes>
     <docsUrl>https://www.metanorma.org/author/getting-started/</docsUrl>
     <bugTrackerUrl>https://github.com/metanorma/chocolatey-metanorma/issues</bugTrackerUrl>
-    <tags>metanorma documentation generator</tags>
-    <summary>The standard of standards</summary>
-    <description><![CDATA[**Metanorma** an open-source framework for writing and publishing standards documents with a focus on semantic authoring and flexible output support. Here’s what you can do with Metanorma: 
- - Build tools for authoring standards and formatting them in accordance with your organization’s practices
- - Use the existing processor ecosystem to create documents compliant to the requirements of ISO, RFC, CalConnect, and others.
+    <tags>metanorma standards publishing documentation</tags>
+    <summary>The award-winning standards publication suite.</summary>
+    <description><![CDATA[Metanorma is the award-winning, open-source, digital standards suite for authoring and publishing adopted by SDOs worldwide. Start delivering tomorrow's standards, today.
 
  ## VirusTotal results
 
@@ -28,10 +26,11 @@
 
   We constantly recheck VirusTotal reports and can confirm that reported issues are false-positive]]></description>
     <dependencies>
-      <dependency id="git" version="[2.5.0,)"/>
-      <dependency id="python3" version="[3.0.1,)"/>
-      <dependency id="javaruntime" version="[8.0.40,)"/>
-      <dependency id="plantuml" version="[1.2018.0,)"/>
+      <dependency id="git" version="[2.50.0,)"/>
+      <dependency id="python3" version="[3.13.0,)"/>
+      <dependency id="javaruntime" version="[8.0.451,)"/>
+      <dependency id="plantuml" version="[1.2025.2,)"/>
+      <dependency id="inkscape" version="[1.4.0,)"/>
       <dependency id="graphviz" version="[2.28.0,)"/>
     </dependencies>
   </metadata>
