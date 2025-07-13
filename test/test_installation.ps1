@@ -169,14 +169,14 @@ function Test-InstallationScript {
     $global:FilesCreated = @()
     $global:BinFilesRegistered = @()
 
-    # Create mock files that the script expects
+    # Verify required files exist in tools directory
     $toolsDir = ".\tools"
-    if (!(Test-Path $toolsDir)) {
-        New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
+    if (!(Test-Path "$toolsDir/metanorma.url.txt")) {
+        throw "metanorma.url.txt not found in tools directory"
     }
-
-    "https://github.com/metanorma/metanorma-cli/releases/download/v1.7.0/metanorma-windows-x64.exe" | Out-File -FilePath "$toolsDir/metanorma.url.txt" -Encoding ASCII
-    "abc123def456" | Out-File -FilePath "$toolsDir/metanorma.sha256.txt" -Encoding ASCII
+    if (!(Test-Path "$toolsDir/metanorma.sha256.txt")) {
+        throw "metanorma.sha256.txt not found in tools directory"
+    }
 
     try {
         # Simulate the installation script execution step by step
@@ -409,12 +409,10 @@ function Show-TestSummary {
 function Cleanup-TestFiles {
     Write-Host "`nCleaning up test files..." -ForegroundColor Yellow
 
-    # Remove created directories and files
+    # Remove only test-created directories and files (not the actual tools files)
     $pathsToClean = @(
         "${env:ChocolateyInstall}/lib/metanorma",
-        "./tools/metanorma.url.txt",
-        "./tools/metanorma.sha256.txt",
-        "./tools/metanorma.exe"
+        "./tools/metanorma.exe"  # Only remove the downloaded exe, not the config files
     )
 
     foreach ($path in $pathsToClean) {
