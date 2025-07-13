@@ -35,20 +35,23 @@ jobs:
 
           # Verify metanorma executable is available
           if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
-            Write-Host "✓ metanorma executable found"
+            Write-Host "[OK] metanorma executable found"
             metanorma version
           } else {
-            Write-Error "✗ metanorma executable not found in PATH"
+            Write-Error "[ERROR] metanorma executable not found in PATH"
             exit 1
           }
 
-          # Verify xml2rfc is available (for IETF support)
+          # Verify xml2rfc is available (for IETF support) if Python is present
           if (Get-Command "python" -ErrorAction SilentlyContinue) {
-            try {
-              & python -c "import xml2rfc; print('✓ xml2rfc module available:', xml2rfc.__version__)"
-            } catch {
-              Write-Warning "⚠ xml2rfc module not available"
+            if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+              Write-Host "[OK] xml2rfc executable found"
+              xml2rfc --version
+            } else {
+              Write-Warning "[WARN] xml2rfc executable not found (IETF support may be limited)"
             }
+          } else {
+            Write-Host "[INFO] Python not available, xml2rfc was not installed"
           }
         shell: powershell
 
