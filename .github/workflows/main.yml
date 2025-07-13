@@ -18,11 +18,11 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - run: choco pack
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: nupkg
           path: metanorma.*.nupkg
@@ -45,9 +45,9 @@ jobs:
             experimental: true
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: nupkg
           path: test
@@ -93,7 +93,7 @@ jobs:
       matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: nupkg
 
@@ -113,7 +113,7 @@ jobs:
         shell: bash
 
       - name: Fetch samples (${{ matrix.flavor.id }})
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           repository: metanorma/mn-samples-${{ matrix.flavor.id }}
@@ -131,9 +131,9 @@ jobs:
     runs-on: windows-latest
     needs: test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: nupkg
 
