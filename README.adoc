@@ -1,9 +1,8 @@
+= chocolatey-metanorma: Chocolatey install for Metanorma
+
 image:https://github.com/metanorma/chocolatey-metanorma/workflows/main/badge.svg["Build Status", link="https://github.com/metanorma/chocolatey-metanorma/actions"]
 image:https://img.shields.io/chocolatey/v/metanorma.svg["Version", link="https://chocolatey.org/packages/metanorma"]
 image:https://img.shields.io/chocolatey/dt/metanorma.svg["Downloads", link="https://chocolatey.org/packages/metanorma"]
-
-= chocolatey-metanorma: Chocolatey install for Metanorma
-
 
 == Modifying the package
 
@@ -16,11 +15,39 @@ image:https://img.shields.io/chocolatey/dt/metanorma.svg["Downloads", link="http
 
 * Run `choco pack` in the same directory as `metanorma.nuspec`
 
-NOTE: If you are running this from a command prompt/Powershell prompt, you must run it "`as Administrator`".
+NOTE: If you are running this from a command prompt/Powershell prompt, you must
+run it "`as Administrator`".
 
 == Testing the package
 
-NOTE: Testing should be done on a Virtual Machine (See: https://github.com/chocolatey/chocolatey-test-environment)
+=== Automated testing
+
+The repository includes a comprehensive PowerShell test script that validates
+the installation and uninstallation logic without requiring actual Chocolatey
+installation:
+
+[source,sh]
+----
+# Run all test scenarios (Windows)
+pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -Verbose
+
+# Test specific scenarios
+pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -WithPython -Verbose
+pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -WithoutPython -Verbose
+pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -TestUninstall -Verbose
+----
+
+The test script validates:
+
+* Metanorma executable download and registration
+* xml2rfc installation when Python is available
+* Proper handling when Python is not available
+* Uninstallation and cleanup procedures
+* Windows Chocolatey package functionality
+
+=== Manual testing
+
+NOTE: Manual testing should be done on a Virtual Machine (See: https://github.com/chocolatey/chocolatey-test-environment)
 
 In the package directory, use:
 
@@ -31,7 +58,8 @@ Or, use the full path:
 
 * `choco install metanorma -source 'c:\path\to\package' -f`
 
-After executing the install, ensure that `metanorma.exe` is installed by executing the following command from the command prompt:
+After executing the install, ensure that `metanorma.exe` is installed by
+executing the following command from the command prompt:
 
 [source,sh]
 ----
@@ -51,16 +79,18 @@ Execute the following command to uninstall Metanorma.
 choco uninstall metanorma -y
 ----
 
-After executing the uninstall ensure that `metanorma` is not found in the Chocolatey install path.
+After executing the uninstall ensure that `metanorma` is not found in the
+Chocolatey install path.
 
-You can also try running `metanorma version` from the command-line to see if it is still installed
+You can also try running `metanorma version` from the command-line to see if it
+is still installed
 
 
 == Publish the package to the Chocolatey community feed repository
 
 [source,sh]
 ----
-choco apikey -k [API_KEY_HERE] -source https://chocolatey.org/`
+choco apikey -k [API_KEY_HERE] -source https://chocolatey.org/
 
 # package name can be omitted below
 choco push metanorma.[version num].nupkg -s https://chocolatey.org/
@@ -82,3 +112,4 @@ cinst metanorma -y
 
 See the https://github.com/chocolatey/choco/wiki/CreatePackagesQuickStart[Chocolatey Packages Quick Start]
 for more information.
+# Test fixes for Windows compatibility
