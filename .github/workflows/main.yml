@@ -28,7 +28,7 @@ jobs:
           path: metanorma.*.nupkg
 
   test-docker:
-    runs-on: windows-2019 # must match to test/Dockerfile image
+    runs-on: windows-2022 # must match to test/Dockerfile image
     needs: [build, build-matrix]
 
     concurrency:
