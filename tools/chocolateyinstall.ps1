@@ -25,35 +25,57 @@ if (Get-Command "python" -ErrorAction SilentlyContinue) {
 	try {
 		# Create isolated virtual environment for xml2rfc
 		$venvDir = "${env:ChocolateyInstall}\lib\metanorma\xml2rfc-venv"
-		& python -m venv "$venvDir"
+		Write-Host "Creating virtual environment at: $venvDir"
 
+		$venvOutput = & python -m venv "$venvDir" 2>&1
 		if ($LASTEXITCODE -ne 0) {
-			throw "Failed to create virtual environment for xml2rfc"
+			Write-Host "Virtual environment creation output: $venvOutput"
+			throw "Failed to create virtual environment for xml2rfc (exit code: $LASTEXITCODE)"
+		}
+		Write-Host "Virtual environment created successfully"
+
+		# Verify virtual environment was created
+		$pipExe = "$venvDir\Scripts\pip.exe"
+		if (-not (Test-Path $pipExe)) {
+			throw "pip executable not found at $pipExe after virtual environment creation"
 		}
 
-		# Install xml2rfc in the virtual environment
-		& "$venvDir\Scripts\pip" install --upgrade pip
+		# Install xml2rfc in the virtual environment with verbose output
+		Write-Host "Upgrading pip in virtual environment..."
+		$pipUpgradeOutput = & "$pipExe" install --upgrade pip --verbose 2>&1
 		if ($LASTEXITCODE -ne 0) {
-			throw "Failed to upgrade pip in xml2rfc virtual environment"
+			Write-Host "Pip upgrade output: $pipUpgradeOutput"
+			throw "Failed to upgrade pip in xml2rfc virtual environment (exit code: $LASTEXITCODE)"
 		}
+		Write-Host "Pip upgraded successfully"
 
-		& "$venvDir\Scripts\pip" install xml2rfc idnits
+		Write-Host "Installing xml2rfc and idnits..."
+		$xml2rfcInstallOutput = & "$pipExe" install xml2rfc idnits --verbose --no-cache-dir 2>&1
 		if ($LASTEXITCODE -ne 0) {
-			throw "Failed to install xml2rfc via pip"
+			Write-Host "xml2rfc installation output: $xml2rfcInstallOutput"
+			throw "Failed to install xml2rfc via pip (exit code: $LASTEXITCODE)"
 		}
+		Write-Host "xml2rfc and idnits installed successfully"
 
+		# Verify xml2rfc executable exists
 		$xml2rfcExe = "$venvDir\Scripts\xml2rfc.exe"
 		if (-not (Test-Path $xml2rfcExe)) {
+			# List contents of Scripts directory for debugging
+			$scriptsDir = "$venvDir\Scripts"
+			if (Test-Path $scriptsDir) {
+				$scriptsContents = Get-ChildItem $scriptsDir | Select-Object Name
+				Write-Host "Contents of Scripts directory: $($scriptsContents | Out-String)"
+			}
 			throw "xml2rfc executable not found after installation at $xml2rfcExe"
 		}
 
 		# Register xml2rfc executable with Chocolatey
 		Install-BinFile -Name "xml2rfc" -Path "$xml2rfcExe"
-		Write-Host "xml2rfc successfully installed and registered"
+		Write-Host "xml2rfc successfully installed and registered at $xml2rfcExe"
 	} catch {
 		Write-Error "FATAL: xml2rfc installation failed: $_"
 		Write-Error "IETF support requires xml2rfc to be properly installed"
-		throw "xml2rfc installation failed"
+		throw "xml2rfc installation failed: $_"
 	}
 } else {
 	Write-Error "FATAL: Python not found - Python is required for xml2rfc installation"
