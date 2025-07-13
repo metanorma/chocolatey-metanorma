@@ -15,7 +15,7 @@ jobs:
   push-tag:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
 
@@ -29,9 +29,9 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y libxml2-utils
 
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.1'
+    # - uses: ruby/setup-ruby@v1
+    #   with:
+    #     ruby-version: '3.4'
 
     - name: Parse metanorma-cli version
       env:
@@ -42,10 +42,13 @@ jobs:
 
     - name: Update metanorma.nuspec
       run: |
+        CURRENT_YEAR=$(date +%Y)
         xmllint --shell metanorma.nuspec << EOF
         setns ns=http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd
         cd /ns:package/ns:metadata/ns:version
         set ${PACKAGE_VERSION}
+        cd /ns:package/ns:metadata/ns:copyright
+        set ${CURRENT_YEAR} Ribose Inc.
         save
         exit
         EOF
