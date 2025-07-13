@@ -1,5 +1,5 @@
-# base image must respect execution environment widnows-2019 in .github/workflows/main.yml
-FROM mcr.microsoft.com/windows:1809
+# base image must respect execution environment widnows-2022 in .github/workflows/main.yml
+FROM mcr.microsoft.com/windows/server:ltsc2022
 SHELL ["powershell"]
 
 # https://chocolatey.org/install
