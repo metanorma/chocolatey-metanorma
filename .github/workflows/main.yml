@@ -42,17 +42,25 @@ jobs:
             exit 1
           }
 
-          # Verify xml2rfc is available (for IETF support) if Python is present
-          if (Get-Command "python" -ErrorAction SilentlyContinue) {
-            if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
-              Write-Host "[OK] xml2rfc executable found"
-              xml2rfc --version
-            } else {
-              Write-Warning "[WARN] xml2rfc executable not found (IETF support may be limited)"
-            }
+          # Verify xml2rfc is available (required for IETF support)
+          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] xml2rfc executable found"
+            xml2rfc --version
           } else {
-            Write-Host "[INFO] Python not available, xml2rfc was not installed"
+            Write-Error "[ERROR] xml2rfc executable not found - IETF support requires xml2rfc"
+            exit 1
           }
+        shell: powershell
+
+  test-scripts:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test installation/uninstallation scripts
+        run: |
+          # Run comprehensive test suite
+          pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -Verbose
         shell: powershell
 
   test-docker:
@@ -114,7 +122,7 @@ jobs:
       group: 'test-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
       cancel-in-progress: true
 
-    continue-on-error: ${{ matrix.flavor.experimental || matrix.flavor.id == 'ietf' }} # https://github.com/metanorma/chocolatey-metanorma/issues/78
+    continue-on-error: ${{ matrix.flavor.experimental }}
     strategy:
       max-parallel: 5
       fail-fast: false
@@ -157,7 +165,7 @@ jobs:
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
-    needs: test
+    needs: [test, test-scripts]
     steps:
       - uses: actions/checkout@v4
 
