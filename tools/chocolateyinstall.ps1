@@ -88,18 +88,34 @@ try {
 
   $installArgs = @("install", "xml2rfc", "--user", "--no-cache-dir", "--quiet")
 
-  if ($pipCmd -eq "python -m pip") {
-    $result = & python -m pip @installArgs 2>&1
-  } else {
-    $result = & $pipCmd @installArgs 2>&1
-  }
+  # Temporarily allow warnings to not break the installation
+  $originalErrorActionPreference = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
 
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "pip install output: $result" -ForegroundColor Red
-    throw "Failed to install xml2rfc via pip (exit code: $LASTEXITCODE)"
-  }
+  try {
+    if ($pipCmd -eq "python -m pip") {
+      $result = & python -m pip @installArgs 2>&1
+    } else {
+      $result = & $pipCmd @installArgs 2>&1
+    }
 
-  Write-Host "xml2rfc package installed successfully" -ForegroundColor Green
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host "pip install output: $result" -ForegroundColor Red
+      throw "Failed to install xml2rfc via pip (exit code: $LASTEXITCODE)"
+    }
+
+    # Filter out PATH warnings which are common and non-fatal
+    $filteredResult = $result | Where-Object { $_ -notmatch "WARNING.*is not on PATH" }
+    if ($filteredResult) {
+      Write-Host "pip install output: $filteredResult" -ForegroundColor Yellow
+    }
+
+    Write-Host "xml2rfc package installed successfully" -ForegroundColor Green
+  }
+  finally {
+    # Restore original error action preference
+    $ErrorActionPreference = $originalErrorActionPreference
+  }
 
   # Attempt to locate and register xml2rfc executable
   $xml2rfcExe = $null
