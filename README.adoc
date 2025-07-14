@@ -112,3 +112,4 @@ cinst metanorma -y
 
 See the https://github.com/chocolatey/choco/wiki/CreatePackagesQuickStart[Chocolatey Packages Quick Start]
 for more information.
+# Test fixes for Windows compatibility
