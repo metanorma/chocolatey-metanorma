@@ -31,14 +31,20 @@ jobs:
       - name: Test package installation
         run: |
           # Install the package from local source
-          if (!choco install --no-progress metanorma -dv -y -s "'.;chocolatey'") {
+          $installResult = choco install --no-progress metanorma -dv -y -s "'.;chocolatey'" 2>&1 | Tee-Object -FilePath "choco.install.log"
+          if ($LASTEXITCODE -ne 0) {
             # workaround for https://github.com/chocolatey/choco/issues/1691
-            $logFile = "choco.install.log"
-            Get-Content $logFile | Write-Host
-            if (Select-String -Path $logFile -Pattern "git.install.*exited 1") {
-              Write-Host "Git installation failed. Ignoring the error."
+            Write-Host "Installation failed, checking for git installation error..."
+            Get-Content "choco.install.log" | Write-Host
+            if (Select-String -Path "choco.install.log" -Pattern "git.install.*exited 1") {
+              Write-Host "Git installation failed. Ignoring the error and retrying without dependencies."
               choco install --ignore-dependencies --no-progress metanorma -dv -y -s "'.;chocolatey'"
+              if ($LASTEXITCODE -ne 0) {
+                Write-Error "Package installation failed even without dependencies"
+                exit 1
+              }
             } else {
+              Write-Error "Package installation failed for unknown reason"
               exit 1
             }
           }
