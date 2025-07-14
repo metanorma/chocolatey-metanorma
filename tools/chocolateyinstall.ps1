@@ -38,6 +38,29 @@ if (-not (Test-Path $exePath)) {
 
 # Register metanorma executable with Chocolatey
 Install-BinFile -Name "metanorma" -Path "$exePath"
+
+# Verify that the shim was created successfully
+$shimPath = "$($Env:ChocolateyInstall)\bin\metanorma.exe"
+if (Test-Path $shimPath) {
+  Write-Host "Metanorma shim created successfully at: $shimPath" -ForegroundColor Green
+
+  # Test that the shim works
+  try {
+    $versionOutput = & $shimPath --version 2>&1
+    if ($LASTEXITCODE -eq 0) {
+      Write-Host "Metanorma shim verification successful: $versionOutput" -ForegroundColor Green
+    } else {
+      Write-Warning "Metanorma shim created but version check failed (exit code: $LASTEXITCODE)"
+      Write-Host "Output: $versionOutput" -ForegroundColor Yellow
+    }
+  } catch {
+    Write-Warning "Metanorma shim created but verification failed: $_"
+  }
+} else {
+  Write-Warning "Metanorma shim was not created at expected location: $shimPath"
+  Write-Host "Metanorma executable is still available at: $exePath" -ForegroundColor Yellow
+}
+
 Write-Host "Metanorma executable registered successfully" -ForegroundColor Green
 
 # Install xml2rfc for IETF support (required dependency)
