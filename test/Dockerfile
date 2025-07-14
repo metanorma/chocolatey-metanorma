@@ -9,6 +9,6 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
 
 # metanorma install
 ADD metanorma.*.nupkg .
-RUN choco install --no-progress metanorma -dv -y -s "'.;chocolatey'"
+RUN choco install --no-progress metanorma -dv -y -s ".;chocolatey"
 
 ENTRYPOINT ["powershell.exe", "-ExecutionPolicy", "Bypass"]
