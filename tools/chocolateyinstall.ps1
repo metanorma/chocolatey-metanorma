@@ -72,9 +72,11 @@ if (-not $pythonCmd) {
 }
 
 if (-not $pythonCmd) {
-  Write-Error "Python is required for xml2rfc installation but was not found in PATH"
-  Write-Error "Please install Python from https://www.python.org/ before installing metanorma"
-  throw "Python dependency not satisfied"
+  Write-Warning "Python is required for xml2rfc installation but was not found in PATH"
+  Write-Warning "Please install Python from https://www.python.org/ to enable IETF document processing"
+  Write-Host "Metanorma will still work for non-IETF document types" -ForegroundColor Yellow
+  Write-Host "Metanorma installation completed successfully!" -ForegroundColor Green
+  return
 }
 
 Write-Host "Found Python at: $($pythonCmd.Source)" -ForegroundColor Yellow
@@ -187,9 +189,10 @@ try {
   }
 
 } catch {
-  Write-Error "Failed to install xml2rfc dependency: $_"
-  Write-Error "IETF document processing requires xml2rfc to be available"
-  throw "xml2rfc installation failed: $_"
+  Write-Warning "Failed to install xml2rfc dependency: $_"
+  Write-Warning "IETF document processing requires xml2rfc to be available"
+  Write-Warning "You may need to install xml2rfc manually: pip install xml2rfc"
+  Write-Host "Metanorma will still work for non-IETF document types" -ForegroundColor Yellow
 }
 
 Write-Host "Metanorma installation completed successfully!"
