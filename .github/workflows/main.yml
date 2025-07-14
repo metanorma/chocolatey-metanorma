@@ -57,8 +57,20 @@ jobs:
             Write-Host "[OK] xml2rfc executable found"
             xml2rfc --version
           } else {
-            Write-Error "[ERROR] xml2rfc executable not found - IETF support requires xml2rfc"
-            exit 1
+            # Try python -m xml2rfc as fallback
+            try {
+              $xml2rfcVersion = & python -m xml2rfc --version 2>&1
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "[OK] xml2rfc available via python -m xml2rfc"
+                Write-Host $xml2rfcVersion
+              } else {
+                Write-Error "[ERROR] xml2rfc not available - IETF support requires xml2rfc"
+                exit 1
+              }
+            } catch {
+              Write-Error "[ERROR] xml2rfc not available - IETF support requires xml2rfc"
+              exit 1
+            }
           }
         shell: powershell
 

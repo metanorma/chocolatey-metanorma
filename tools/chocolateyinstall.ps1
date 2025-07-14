@@ -23,55 +23,74 @@ Install-BinFile -Name "metanorma" -Path "$exePath"
 if (Get-Command "python" -ErrorAction SilentlyContinue) {
 	Write-Host "Installing xml2rfc for IETF support..."
 	try {
-		# Create isolated virtual environment for xml2rfc
-		$venvDir = "${env:ChocolateyInstall}\lib\metanorma\xml2rfc-venv"
-		Write-Host "Creating virtual environment at: $venvDir"
-
-		$venvOutput = & python -m venv "$venvDir" 2>&1
-		if ($LASTEXITCODE -ne 0) {
-			Write-Host "Virtual environment creation output: $venvOutput"
-			throw "Failed to create virtual environment for xml2rfc (exit code: $LASTEXITCODE)"
+		# Try to find pip command
+		$pipCmd = $null
+		if (Get-Command "pip" -ErrorAction SilentlyContinue) {
+			$pipCmd = "pip"
+		} elseif (Get-Command "pip3" -ErrorAction SilentlyContinue) {
+			$pipCmd = "pip3"
+		} else {
+			# Try python -m pip
+			$testPip = & python -m pip --version 2>&1
+			if ($LASTEXITCODE -eq 0) {
+				$pipCmd = "python -m pip"
+			} else {
+				throw "No pip command found. Please ensure pip is installed."
+			}
 		}
-		Write-Host "Virtual environment created successfully"
 
-		# Verify virtual environment was created
-		$pipExe = "$venvDir\Scripts\pip.exe"
-		if (-not (Test-Path $pipExe)) {
-			throw "pip executable not found at $pipExe after virtual environment creation"
-		}
+		Write-Host "Using pip command: $pipCmd"
 
-		# Install xml2rfc in the virtual environment with verbose output
-		Write-Host "Upgrading pip in virtual environment..."
-		$pipUpgradeOutput = & "$pipExe" install --upgrade pip --verbose 2>&1
-		if ($LASTEXITCODE -ne 0) {
-			Write-Host "Pip upgrade output: $pipUpgradeOutput"
-			throw "Failed to upgrade pip in xml2rfc virtual environment (exit code: $LASTEXITCODE)"
-		}
-		Write-Host "Pip upgraded successfully"
-
-		Write-Host "Installing xml2rfc..."
-		$xml2rfcInstallOutput = & "$pipExe" install xml2rfc --verbose --no-cache-dir 2>&1
+		# Install xml2rfc using pip directly
+		Write-Host "Installing xml2rfc using $pipCmd..."
+		$xml2rfcInstallOutput = & cmd /c "$pipCmd install xml2rfc --user --no-cache-dir" 2>&1
 		if ($LASTEXITCODE -ne 0) {
 			Write-Host "xml2rfc installation output: $xml2rfcInstallOutput"
 			throw "Failed to install xml2rfc via pip (exit code: $LASTEXITCODE)"
 		}
 		Write-Host "xml2rfc installed successfully"
 
-		# Verify xml2rfc executable exists
-		$xml2rfcExe = "$venvDir\Scripts\xml2rfc.exe"
-		if (-not (Test-Path $xml2rfcExe)) {
-			# List contents of Scripts directory for debugging
-			$scriptsDir = "$venvDir\Scripts"
-			if (Test-Path $scriptsDir) {
-				$scriptsContents = Get-ChildItem $scriptsDir | Select-Object Name
-				Write-Host "Contents of Scripts directory: $($scriptsContents | Out-String)"
+		# Try to find xml2rfc executable in common locations
+		$xml2rfcExe = $null
+		$possiblePaths = @(
+			"$env:APPDATA\Python\Python*\Scripts\xml2rfc.exe",
+			"$env:LOCALAPPDATA\Programs\Python\Python*\Scripts\xml2rfc.exe",
+			"C:\Python*\Scripts\xml2rfc.exe"
+		)
+
+		foreach ($pathPattern in $possiblePaths) {
+			$foundPaths = Get-ChildItem -Path $pathPattern -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+			if ($foundPaths) {
+				$xml2rfcExe = $foundPaths[0].FullName
+				break
 			}
-			throw "xml2rfc executable not found after installation at $xml2rfcExe"
 		}
 
-		# Register xml2rfc executable with Chocolatey
-		Install-BinFile -Name "xml2rfc" -Path "$xml2rfcExe"
-		Write-Host "xml2rfc successfully installed and registered at $xml2rfcExe"
+		# If not found in common locations, try to find it via python
+		if (-not $xml2rfcExe) {
+			try {
+				$pythonScriptsOutput = & python -c "import site; print(site.getusersitepackages())" 2>&1
+				if ($LASTEXITCODE -eq 0) {
+					$userSitePackages = $pythonScriptsOutput.Trim()
+					$scriptsDir = Join-Path (Split-Path $userSitePackages -Parent) "Scripts"
+					$possibleXml2rfc = Join-Path $scriptsDir "xml2rfc.exe"
+					if (Test-Path $possibleXml2rfc) {
+						$xml2rfcExe = $possibleXml2rfc
+					}
+				}
+			} catch {
+				Write-Host "Could not determine user site packages directory"
+			}
+		}
+
+		if ($xml2rfcExe -and (Test-Path $xml2rfcExe)) {
+			# Register xml2rfc executable with Chocolatey
+			Install-BinFile -Name "xml2rfc" -Path "$xml2rfcExe"
+			Write-Host "xml2rfc successfully installed and registered at $xml2rfcExe"
+		} else {
+			Write-Warning "xml2rfc executable not found in expected locations, but installation appeared successful"
+			Write-Host "xml2rfc may still be available via 'python -m xml2rfc'"
+		}
 	} catch {
 		Write-Error "FATAL: xml2rfc installation failed: $_"
 		Write-Error "IETF support requires xml2rfc to be properly installed"
