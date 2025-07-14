@@ -31,7 +31,17 @@ jobs:
       - name: Test package installation
         run: |
           # Install the package from local source
-          choco install --no-progress metanorma -dv -y -s "'.;chocolatey'"
+          if (!choco install --no-progress metanorma -dv -y -s "'.;chocolatey'") {
+            # workaround for https://github.com/chocolatey/choco/issues/1691
+            $logFile = "choco.install.log"
+            Get-Content $logFile | Write-Host
+            if (Select-String -Path $logFile -Pattern "git.install.*exited 1") {
+              Write-Host "Git installation failed. Ignoring the error."
+              choco install --ignore-dependencies --no-progress metanorma -dv -y -s "'.;chocolatey'"
+            } else {
+              exit 1
+            }
+          }
 
           # Verify metanorma executable is available
           if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {

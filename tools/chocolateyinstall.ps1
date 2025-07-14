@@ -49,13 +49,13 @@ if (Get-Command "python" -ErrorAction SilentlyContinue) {
 		}
 		Write-Host "Pip upgraded successfully"
 
-		Write-Host "Installing xml2rfc and idnits..."
-		$xml2rfcInstallOutput = & "$pipExe" install xml2rfc idnits --verbose --no-cache-dir 2>&1
+		Write-Host "Installing xml2rfc..."
+		$xml2rfcInstallOutput = & "$pipExe" install xml2rfc --verbose --no-cache-dir 2>&1
 		if ($LASTEXITCODE -ne 0) {
 			Write-Host "xml2rfc installation output: $xml2rfcInstallOutput"
 			throw "Failed to install xml2rfc via pip (exit code: $LASTEXITCODE)"
 		}
-		Write-Host "xml2rfc and idnits installed successfully"
+		Write-Host "xml2rfc installed successfully"
 
 		# Verify xml2rfc executable exists
 		$xml2rfcExe = "$venvDir\Scripts\xml2rfc.exe"
