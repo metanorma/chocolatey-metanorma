@@ -31,14 +31,14 @@ jobs:
       - name: Test package installation
         run: |
           # Install the package from local source
-          $installResult = choco install --no-progress metanorma -dv -y -s "'.;chocolatey'" 2>&1 | Tee-Object -FilePath "choco.install.log"
+          $installResult = choco install --no-progress metanorma -dv -y -s ".;chocolatey" 2>&1 | Tee-Object -FilePath "choco.install.log"
           if ($LASTEXITCODE -ne 0) {
             # workaround for https://github.com/chocolatey/choco/issues/1691
             Write-Host "Installation failed, checking for git installation error..."
             Get-Content "choco.install.log" | Write-Host
             if (Select-String -Path "choco.install.log" -Pattern "git.install.*exited 1") {
               Write-Host "Git installation failed. Ignoring the error and retrying without dependencies."
-              choco install --ignore-dependencies --no-progress metanorma -dv -y -s "'.;chocolatey'"
+              choco install --ignore-dependencies --no-progress metanorma -dv -y -s ".;chocolatey"
               if ($LASTEXITCODE -ne 0) {
                 Write-Error "Package installation failed even without dependencies"
                 exit 1
@@ -164,11 +164,11 @@ jobs:
       # workaround for https://github.com/chocolatey/choco/issues/1691
       - run: |
           set +e
-          if ! choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'" > choco.install.log 2>&1; then
+          if ! choco install --no-progress -pre metanorma -dv -s ".;chocolatey" > choco.install.log 2>&1; then
             cat choco.install.log
             if grep -q " - git\.install (exited 1)" choco.install.log; then
               echo "Git installation failed. Ignoring the error."
-              choco install --ignore-dependencies --no-progress -pre metanorma -dv -s "'.;chocolatey'"
+              choco install --ignore-dependencies --no-progress -pre metanorma -dv -s ".;chocolatey"
               exit 0
             else
               exit 1
