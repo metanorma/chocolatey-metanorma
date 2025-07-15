@@ -26,7 +26,7 @@ RUN Write-Host '=== Chocolatey Version ==='; \
 RUN $pkg = Get-ChildItem C:/packages/metanorma.*.nupkg | Select-Object -First 1; \
     if ($pkg) { \
         Write-Host "Installing package: $($pkg.Name)"; \
-        & $env:ChocolateyInstall\bin\choco.exe install $pkg.FullName --yes --force --allow-unofficial --no-progress \
+        & $env:ChocolateyInstall\bin\choco.exe install $pkg.FullName --version="1.12.10" --source="C:\packages"--yes --force --allow-unofficial --no-progress --ignore-dependencies \
     } else { \
         Write-Host 'ERROR: No .nupkg package found in C:/packages'; \
         Get-ChildItem C:/packages -Force; \
