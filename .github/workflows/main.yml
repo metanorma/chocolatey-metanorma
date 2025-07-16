@@ -46,22 +46,8 @@ jobs:
             xml2rfc.*.nupkg
 
       # Install dependencies first, then xml2rfc from local package
-      - name: Install dependencies and xml2rfc
-        run: |
-          Write-Host "Installing python3 dependency from Chocolatey..." -ForegroundColor Yellow
-          choco install python3 -y --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to install python3 dependency"
-            exit 1
-          }
-
-          Write-Host "Installing xml2rfc from downloaded package..." -ForegroundColor Yellow
-          choco install xml2rfc --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to install xml2rfc from downloaded package"
-            exit 1
-          }
-          Write-Host "xml2rfc installed successfully from local package" -ForegroundColor Green
+      - name: Install xml2rfc
+        run: choco install xml2rfc --source="'$(Get-Location);chocolatey'" -y --no-progress
         shell: powershell
 
       # Verify xml2rfc executable is available
@@ -77,16 +63,9 @@ jobs:
           }
 
       # Install metanorma from local package and verify installation
-      - name: Install and test metanorma
+      - name: Install metanorma
         shell: powershell
-        run: |
-          Write-Host "Installing metanorma from local package..." -ForegroundColor Yellow
-          choco install metanorma --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to install metanorma from local package"
-            exit 1
-          }
-          Write-Host "metanorma installed successfully from local package" -ForegroundColor Green
+        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
 
       # Verify metanorma executable is available
       - name: Verify metanorma installation
@@ -187,22 +166,8 @@ jobs:
           name: nupkg
 
       # Install dependencies first, then xml2rfc from local package
-      - name: Install dependencies and xml2rfc
-        run: |
-          Write-Host "Installing python3 dependency from Chocolatey..." -ForegroundColor Yellow
-          choco install python3 -y --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to install python3 dependency"
-            exit 1
-          }
-
-          Write-Host "Installing xml2rfc from downloaded package..." -ForegroundColor Yellow
-          choco install xml2rfc --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to install xml2rfc from downloaded package"
-            exit 1
-          }
-          Write-Host "xml2rfc installed successfully from local package" -ForegroundColor Green
+      - name: Install xml2rfc
+        run: choco install xml2rfc --source="'$(Get-Location);chocolatey'" -y --no-progress
         shell: powershell
 
       # Verify xml2rfc executable is available
@@ -218,16 +183,9 @@ jobs:
           }
 
       # Install metanorma from local package and verify installation
-      - name: Install and test metanorma
+      - name: Install metanorma
         shell: powershell
-        run: |
-          Write-Host "Installing metanorma from local package..." -ForegroundColor Yellow
-          choco install metanorma --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to install metanorma from local package"
-            exit 1
-          }
-          Write-Host "metanorma installed successfully from local package" -ForegroundColor Green
+        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
 
       # Verify metanorma executable is available
       - name: Verify metanorma installation
