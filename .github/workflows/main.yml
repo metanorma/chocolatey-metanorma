@@ -142,12 +142,6 @@ jobs:
 
       - run: docker image inspect metanorma-docker-test
 
-      - run: |
-          echo "call docker run metanorma-docker-test metanorma %*" > ./metanorma.cmd
-          chmod +x ./metanorma.cmd
-          echo "$(pwd)" >> $GITHUB_PATH
-        shell: bash
-
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v4
         with:
@@ -157,17 +151,20 @@ jobs:
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 
+      - name: Setup metanorma command and generate site documentation
+        working-directory: ${{ matrix.flavor.id }}
+        shell: powershell
+        run: |
+          # Generate site documentation directly with docker
+          # Mount current directory and run metanorma command inside container
+          $currentDir = (Get-Location).Path
+          docker run --rm -v "${currentDir}:C:\workspace" -w "C:\workspace" metanorma-docker-test -Command "metanorma site generate -c C:\workspace\metanorma.yml --agree-to-terms"
+
       # actions-mn/site-gen@main does not support Windows yet
       # - uses: actions-mn/site-gen@main
       #   with:
       #     agree-to-terms: true
       #     source-path: ${{ matrix.flavor.id }}
-      - name: Generate site documentation
-        working-directory: ${{ matrix.flavor.id }}
-        shell: bash
-        run: |
-          metanorma site generate --agree-to-terms
-
   test:
     runs-on: windows-latest
     needs: [build, build-matrix]
