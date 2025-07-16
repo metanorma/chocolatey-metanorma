@@ -5,7 +5,7 @@ ARG BASE_IMAGE=mcr.microsoft.com/windows/servercore:ltsc2022
 # mcr.microsoft.com/windows/servercore:ltsc2025 - Windows Server 2025
 
 ### Install Chocolatey in a separate layer
-FROM $BASE_IMAGE as chocolatey
+FROM $BASE_IMAGE AS chocolatey
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
@@ -19,7 +19,7 @@ RUN Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1; \
     refreshenv
 
 ### Install xml2rfc and metanorma packages in a separate layer
-FROM chocolatey as packages
+FROM chocolatey AS packages
 
 # Copy both packages to a dedicated directory
 COPY *.nupkg C:/packages/
@@ -32,21 +32,11 @@ RUN Write-Host '=== Chocolatey Version ==='; \
     Write-Host '=== Current working directory ==='; \
     Get-Location; Get-ChildItem -Force
 
-# Install dependencies first, then xml2rfc from local package
-RUN Write-Host 'Installing python3 dependency from Chocolatey...' -ForegroundColor Yellow; \
-    & $env:ChocolateyInstall\bin\choco.exe install python3 -y --no-progress; \
-    if ($LASTEXITCODE -ne 0) { \
-        Write-Error 'Failed to install python3 dependency'; \
-        exit 1 \
-    }
+# Enable global confirmation for Chocolatey commands
+RUN choco feature enable -n allowGlobalConfirmation
 
-RUN Write-Host 'Installing xml2rfc from downloaded package...' -ForegroundColor Yellow; \
-    & $env:ChocolateyInstall\bin\choco.exe install xml2rfc --source='C:/packages' --ignore-dependencies -y --no-progress; \
-    if ($LASTEXITCODE -ne 0) { \
-        Write-Error 'Failed to install xml2rfc from downloaded package'; \
-        exit 1 \
-    }; \
-    Write-Host 'xml2rfc installed successfully from local package' -ForegroundColor Green
+# Install xml2rfc from local package
+RUN choco install xml2rfc --source='C:\packages;chocolatey' -y --no-progress
 
 # Verify xml2rfc executables are available
 RUN if (Get-Command 'xml2rfc' -ErrorAction SilentlyContinue) { \
@@ -61,13 +51,7 @@ RUN Write-Host '=== Verifying xml2rfc installation ==='; \
     choco list xml2rfc --limit-output
 
 # Install metanorma from local package and verify installation
-RUN Write-Host 'Installing metanorma from local package...' -ForegroundColor Yellow; \
-    & $env:ChocolateyInstall\bin\choco.exe install metanorma --source='C:/packages' --ignore-dependencies -y --no-progress; \
-    if ($LASTEXITCODE -ne 0) { \
-        Write-Error 'Failed to install metanorma from local package'; \
-        exit 1 \
-    }; \
-    Write-Host 'metanorma installed successfully from local package' -ForegroundColor Green
+RUN choco install metanorma --source='C:\packages;chocolatey' -y --no-progress
 
 # Verify metanorma executables are available
 RUN if (Get-Command 'metanorma' -ErrorAction SilentlyContinue) { \
@@ -77,6 +61,9 @@ RUN if (Get-Command 'metanorma' -ErrorAction SilentlyContinue) { \
         Write-Error 'metanorma executable not found in PATH'; \
         exit 1 \
     };
+
+# Java encoding fix (https://github.com/metanorma/metanorma-docker/issues/202)
+ENV _JAVA_OPTIONS="-Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8"
 
 RUN Write-Host '=== Verifying metanorma installation ==='; \
     choco list metanorma --limit-output
