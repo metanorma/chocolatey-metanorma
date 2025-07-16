@@ -20,65 +20,85 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: choco pack
+      - name: Pack Chocolatey package
+        run: choco pack
+
+      # Download xml2rfc dependency for Docker builds
+      - name: Get latest xml2rfc release and download package
+        run: |
+          Write-Host "Getting latest xml2rfc release..." -ForegroundColor Yellow
+          $response = Invoke-RestMethod -Uri "https://api.github.com/repos/metanorma/chocolatey-xml2rfc/releases/latest"
+          $version = $response.tag_name
+          $versionNumber = $version.TrimStart('v')
+          $url = "https://github.com/metanorma/chocolatey-xml2rfc/releases/download/$version/xml2rfc.$versionNumber.nupkg"
+          $filename = "xml2rfc.$versionNumber.nupkg"
+          Write-Host "Latest version: $version"
+          Write-Host "Downloading xml2rfc package from: $url"
+          Invoke-WebRequest -Uri $url -OutFile $filename
+          Write-Host "Downloaded xml2rfc package: $filename" -ForegroundColor Green
+        shell: powershell
 
       - uses: actions/upload-artifact@v4
         with:
           name: nupkg
-          path: metanorma.*.nupkg
+          path: |
+            metanorma.*.nupkg
+            xml2rfc.*.nupkg
 
-      # Test the package installation and verify metanorma executable
-      - name: Test package installation
+      # Install dependencies first, then xml2rfc from local package
+      - name: Install dependencies and xml2rfc
         run: |
-          # Install the package from local source
-          $installResult = choco install --no-progress metanorma -dv -y -s ".;chocolatey" 2>&1 | Tee-Object -FilePath "choco.install.log"
+          Write-Host "Installing python3 dependency from Chocolatey..." -ForegroundColor Yellow
+          choco install python3 -y --no-progress
           if ($LASTEXITCODE -ne 0) {
-            # workaround for https://github.com/chocolatey/choco/issues/1691
-            Write-Host "Installation failed, checking for git installation error..."
-            Get-Content "choco.install.log" | Write-Host
-            if (Select-String -Path "choco.install.log" -Pattern "git.install.*exited 1") {
-              Write-Host "Git installation failed. Ignoring the error and retrying without dependencies."
-              choco install --ignore-dependencies --no-progress metanorma -dv -y -s ".;chocolatey"
-              if ($LASTEXITCODE -ne 0) {
-                Write-Error "Package installation failed even without dependencies"
-                exit 1
-              }
-            } else {
-              Write-Error "Package installation failed for unknown reason"
-              exit 1
-            }
-          }
-
-          # Verify metanorma executable is available
-          if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] metanorma executable found"
-            metanorma version
-          } else {
-            Write-Error "[ERROR] metanorma executable not found in PATH"
+            Write-Error "Failed to install python3 dependency"
             exit 1
           }
 
-          # Verify xml2rfc is available (required for IETF support)
+          Write-Host "Installing xml2rfc from downloaded package..." -ForegroundColor Yellow
+          choco install xml2rfc --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install xml2rfc from downloaded package"
+            exit 1
+          }
+          Write-Host "xml2rfc installed successfully from local package" -ForegroundColor Green
+        shell: powershell
+
+      # Verify xml2rfc executable is available
+      - name: Verify xml2rfc installation
+        shell: powershell
+        run: |
           if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
             Write-Host "[OK] xml2rfc executable found"
             xml2rfc --version
           } else {
-            # Try python -m xml2rfc as fallback
-            try {
-              $xml2rfcVersion = & python -m xml2rfc --version 2>&1
-              if ($LASTEXITCODE -eq 0) {
-                Write-Host "[OK] xml2rfc available via python -m xml2rfc"
-                Write-Host $xml2rfcVersion
-              } else {
-                Write-Error "[ERROR] xml2rfc not available - IETF support requires xml2rfc"
-                exit 1
-              }
-            } catch {
-              Write-Error "[ERROR] xml2rfc not available - IETF support requires xml2rfc"
-              exit 1
-            }
+            Write-Error "xml2rfc not available - IETF support requires xml2rfc"
+            exit 1
           }
+
+      # Install metanorma from local package and verify installation
+      - name: Install and test metanorma
         shell: powershell
+        run: |
+          Write-Host "Installing metanorma from local package..." -ForegroundColor Yellow
+          choco install metanorma --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install metanorma from local package"
+            exit 1
+          }
+          Write-Host "metanorma installed successfully from local package" -ForegroundColor Green
+
+      # Verify metanorma executable is available
+      - name: Verify metanorma installation
+        shell: powershell
+        run: |
+          if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] metanorma executable found"
+            metanorma version
+          } else {
+            Write-Error "metanorma executable not found in PATH"
+            exit 1
+          }
 
   test-scripts:
     runs-on: windows-latest
@@ -137,10 +157,16 @@ jobs:
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 
-      - uses: actions-mn/site-gen@main
-        with:
-          agree-to-terms: true
-          source-path: ${{ matrix.flavor.id }}
+      # actions-mn/site-gen@main does not support Windows yet
+      # - uses: actions-mn/site-gen@main
+      #   with:
+      #     agree-to-terms: true
+      #     source-path: ${{ matrix.flavor.id }}
+      - name: Generate site documentation
+        working-directory: ${{ matrix.flavor.id }}
+        shell: bash
+        run: |
+          metanorma site generate --agree-to-terms
 
   test:
     runs-on: windows-latest
@@ -157,24 +183,66 @@ jobs:
       matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           name: nupkg
 
-      # workaround for https://github.com/chocolatey/choco/issues/1691
-      - run: |
-          set +e
-          if ! choco install --no-progress -pre metanorma -dv -s ".;chocolatey" > choco.install.log 2>&1; then
-            cat choco.install.log
-            if grep -q " - git\.install (exited 1)" choco.install.log; then
-              echo "Git installation failed. Ignoring the error."
-              choco install --ignore-dependencies --no-progress -pre metanorma -dv -s ".;chocolatey"
-              exit 0
-            else
-              exit 1
-            fi
-          fi
-        shell: bash
+      # Install dependencies first, then xml2rfc from local package
+      - name: Install dependencies and xml2rfc
+        run: |
+          Write-Host "Installing python3 dependency from Chocolatey..." -ForegroundColor Yellow
+          choco install python3 -y --no-progress
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install python3 dependency"
+            exit 1
+          }
+
+          Write-Host "Installing xml2rfc from downloaded package..." -ForegroundColor Yellow
+          choco install xml2rfc --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install xml2rfc from downloaded package"
+            exit 1
+          }
+          Write-Host "xml2rfc installed successfully from local package" -ForegroundColor Green
+        shell: powershell
+
+      # Verify xml2rfc executable is available
+      - name: Verify xml2rfc installation
+        shell: powershell
+        run: |
+          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] xml2rfc executable found"
+            xml2rfc --version
+          } else {
+            Write-Error "xml2rfc not available - IETF support requires xml2rfc"
+            exit 1
+          }
+
+      # Install metanorma from local package and verify installation
+      - name: Install and test metanorma
+        shell: powershell
+        run: |
+          Write-Host "Installing metanorma from local package..." -ForegroundColor Yellow
+          choco install metanorma --source="'$(Get-Location)'" --ignore-dependencies -y --no-progress
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to install metanorma from local package"
+            exit 1
+          }
+          Write-Host "metanorma installed successfully from local package" -ForegroundColor Green
+
+      # Verify metanorma executable is available
+      - name: Verify metanorma installation
+        shell: powershell
+        run: |
+          if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] metanorma executable found"
+            metanorma version
+          } else {
+            Write-Error "metanorma executable not found in PATH"
+            exit 1
+          }
 
       - name: Fetch samples (${{ matrix.flavor.id }})
         uses: actions/checkout@v4
@@ -188,7 +256,8 @@ jobs:
         with:
           agree-to-terms: true
 
-      - run: choco uninstall metanorma -y
+      - name: Uninstall metanorma
+        run: choco uninstall metanorma -y
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')

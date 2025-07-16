@@ -61,138 +61,41 @@ if (Test-Path $shimPath) {
   Write-Host "Metanorma executable is still available at: $exePath" -ForegroundColor Yellow
 }
 
-Write-Host "Metanorma executable registered successfully" -ForegroundColor Green
+# Verify xml2rfc is available (provided by xml2rfc dependency)
+Write-Host "Verifying xml2rfc availability for IETF support..." -ForegroundColor Green
 
-# Install xml2rfc for IETF support (required dependency)
-Write-Host "Installing xml2rfc for IETF support..." -ForegroundColor Green
+$xml2rfcAvailable = $false
 
-$pythonCmd = Get-Command "python" -ErrorAction SilentlyContinue
-if (-not $pythonCmd) {
-  $pythonCmd = Get-Command "python3" -ErrorAction SilentlyContinue
-}
-
-if (-not $pythonCmd) {
-  Write-Warning "Python is required for xml2rfc installation but was not found in PATH"
-  Write-Warning "Please install Python from https://www.python.org/ to enable IETF document processing"
-  Write-Host "Metanorma will still work for non-IETF document types" -ForegroundColor Yellow
-  Write-Host "Metanorma installation completed successfully!" -ForegroundColor Green
-  return
-}
-
-Write-Host "Found Python at: $($pythonCmd.Source)" -ForegroundColor Yellow
-
-try {
-  # Determine the best pip command to use
-  $pipCmd = $null
-  $pipCommands = @("pip", "pip3", "python -m pip")
-
-  foreach ($cmd in $pipCommands) {
-    try {
-      $testResult = if ($cmd -eq "python -m pip") {
-        & python -m pip --version 2>&1
-      } else {
-        & $cmd --version 2>&1
-      }
-
-      if ($LASTEXITCODE -eq 0) {
-        $pipCmd = $cmd
-        Write-Host "Using pip command: $pipCmd" -ForegroundColor Yellow
-        break
-      }
-    } catch {
-      # Continue to next pip command
-    }
-  }
-
-  if (-not $pipCmd) {
-    throw "No working pip installation found. Please ensure pip is installed with Python."
-  }
-
-  # Install xml2rfc using the best available pip command
-  Write-Host "Installing xml2rfc package..." -ForegroundColor Yellow
-
-  $installArgs = @("install", "xml2rfc", "--user", "--no-cache-dir", "--quiet")
-
-  # Temporarily allow warnings to not break the installation
-  $originalErrorActionPreference = $ErrorActionPreference
-  $ErrorActionPreference = 'Continue'
-
+# Check if xml2rfc is available as a command
+if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+  Write-Host "xml2rfc executable found in PATH" -ForegroundColor Green
+  $xml2rfcAvailable = $true
+} else {
+  # Check if xml2rfc is available via python -m xml2rfc
   try {
-    if ($pipCmd -eq "python -m pip") {
-      $result = & python -m pip @installArgs 2>&1
-    } else {
-      $result = & $pipCmd @installArgs 2>&1
+    $pythonCmd = Get-Command "python" -ErrorAction SilentlyContinue
+    if (-not $pythonCmd) {
+      $pythonCmd = Get-Command "python3" -ErrorAction SilentlyContinue
     }
 
-    if ($LASTEXITCODE -ne 0) {
-      Write-Host "pip install output: $result" -ForegroundColor Red
-      throw "Failed to install xml2rfc via pip (exit code: $LASTEXITCODE)"
-    }
-
-    # Filter out PATH warnings which are common and non-fatal
-    $filteredResult = $result | Where-Object { $_ -notmatch "WARNING.*is not on PATH" }
-    if ($filteredResult) {
-      Write-Host "pip install output: $filteredResult" -ForegroundColor Yellow
-    }
-
-    Write-Host "xml2rfc package installed successfully" -ForegroundColor Green
-  }
-  finally {
-    # Restore original error action preference
-    $ErrorActionPreference = $originalErrorActionPreference
-  }
-
-  # Attempt to locate and register xml2rfc executable
-  $xml2rfcExe = $null
-  $searchPaths = @(
-    "$env:APPDATA\Python\Python*\Scripts\xml2rfc.exe",
-    "$env:LOCALAPPDATA\Programs\Python\Python*\Scripts\xml2rfc.exe",
-    "C:\Python*\Scripts\xml2rfc.exe"
-  )
-
-  foreach ($pathPattern in $searchPaths) {
-    $foundPaths = Get-ChildItem -Path $pathPattern -ErrorAction SilentlyContinue |
-                  Sort-Object LastWriteTime -Descending
-    if ($foundPaths) {
-      $xml2rfcExe = $foundPaths[0].FullName
-      Write-Host "Found xml2rfc executable at: $xml2rfcExe" -ForegroundColor Yellow
-      break
-    }
-  }
-
-  # Try Python site-packages approach if not found
-  if (-not $xml2rfcExe) {
-    try {
-      $userSiteOutput = & python -c "import site; print(site.getusersitepackages())" 2>&1
+    if ($pythonCmd) {
+      $xml2rfcVersion = & python -m xml2rfc --version 2>&1
       if ($LASTEXITCODE -eq 0) {
-        $userSitePackages = $userSiteOutput.Trim()
-        $scriptsDir = Join-Path (Split-Path $userSitePackages -Parent) "Scripts"
-        $candidatePath = Join-Path $scriptsDir "xml2rfc.exe"
-        if (Test-Path $candidatePath) {
-          $xml2rfcExe = $candidatePath
-          Write-Host "Found xml2rfc executable via site-packages: $xml2rfcExe" -ForegroundColor Yellow
-        }
+        Write-Host "xml2rfc available via 'python -m xml2rfc'" -ForegroundColor Green
+        $xml2rfcAvailable = $true
       }
-    } catch {
-      Write-Host "Could not determine Python user site-packages directory" -ForegroundColor Yellow
     }
+  } catch {
+    # xml2rfc not available via python module
   }
+}
 
-  # Register executable if found, otherwise provide fallback information
-  if ($xml2rfcExe -and (Test-Path $xml2rfcExe)) {
-    Install-BinFile -Name "xml2rfc" -Path "$xml2rfcExe"
-    Write-Host "xml2rfc executable registered with Chocolatey" -ForegroundColor Green
-  } else {
-    Write-Warning "xml2rfc executable not found in standard locations"
-    Write-Host "xml2rfc should still be available via 'python -m xml2rfc'" -ForegroundColor Yellow
-    Write-Host "This is sufficient for metanorma IETF document processing" -ForegroundColor Yellow
-  }
-
-} catch {
-  Write-Warning "Failed to install xml2rfc dependency: $_"
-  Write-Warning "IETF document processing requires xml2rfc to be available"
-  Write-Warning "You may need to install xml2rfc manually: pip install xml2rfc"
+if ($xml2rfcAvailable) {
+  Write-Host "IETF document processing is supported" -ForegroundColor Green
+} else {
+  Write-Warning "xml2rfc not found - IETF document processing may not work"
+  Write-Warning "This should be provided by the xml2rfc chocolatey dependency"
   Write-Host "Metanorma will still work for non-IETF document types" -ForegroundColor Yellow
 }
 
-Write-Host "Metanorma installation completed successfully!"
+Write-Host "Metanorma installation completed successfully!" -ForegroundColor Green

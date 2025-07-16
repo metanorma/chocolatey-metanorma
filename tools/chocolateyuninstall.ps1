@@ -10,15 +10,6 @@ try {
   Write-Warning "Could not unregister metanorma executable: $_"
 }
 
-# Uninstall xml2rfc if it was registered by this package
-try {
-  Uninstall-BinFile -Name "xml2rfc"
-  Write-Host "xml2rfc executable unregistered from PATH" -ForegroundColor Yellow
-} catch {
-  # xml2rfc may not have been registered as an executable, which is fine
-  Write-Host "xml2rfc was not registered as an executable (this is normal)" -ForegroundColor Yellow
-}
-
 # Clean up metanorma.exe from tools directory
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $exePath = Join-Path $toolsDir "metanorma.exe"
@@ -34,10 +25,7 @@ if (Test-Path $exePath) {
   Write-Host "Metanorma executable not found in tools directory (already removed)" -ForegroundColor Yellow
 }
 
-# Note about xml2rfc: We don't uninstall xml2rfc via pip because:
-# 1. It was installed with --user flag, so it's in user's Python environment
-# 2. Other applications might depend on it
-# 3. It's a best practice to leave user-installed Python packages intact
-Write-Host "Note: xml2rfc Python package remains installed for potential use by other applications" -ForegroundColor Yellow
+# Note: xml2rfc is handled by the xml2rfc chocolatey package dependency
+# and will be uninstalled automatically when metanorma is uninstalled
 
 Write-Host "Metanorma uninstallation completed successfully!" -ForegroundColor Green

@@ -32,6 +32,7 @@
       <dependency id="plantuml" version="[1.2025.2,)"/>
       <dependency id="inkscape" version="[1.4.0,)"/>
       <dependency id="graphviz" version="[2.28.0,)"/>
+      <dependency id="xml2rfc" version="[3.0.0,)"/>
     </dependencies>
   </metadata>
   <files>
