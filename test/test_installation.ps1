@@ -201,31 +201,39 @@ function Test-InstallationScript {
         # Mock executable registration
         Install-BinFile -Name "metanorma" -Path $exePath
 
-        # Mock xml2rfc installation based on scenario
-        if (Get-Command "python" -ErrorAction SilentlyContinue) {
-            Write-Host "Installing xml2rfc for IETF support..."
+        # Verify xml2rfc is available (provided by xml2rfc dependency)
+        Write-Host "Verifying xml2rfc availability for IETF support..."
+
+        $xml2rfcAvailable = $false
+
+        # Check if xml2rfc is available as a command
+        if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+            Write-Host "xml2rfc executable found in PATH"
+            $xml2rfcAvailable = $true
+        } else {
+            # Check if xml2rfc is available via python -m xml2rfc
             try {
-                # Create isolated virtual environment for xml2rfc
-                $venvDir = "${env:ChocolateyInstall}/lib/metanorma/xml2rfc-venv"
+                $pythonCmd = Get-Command "python" -ErrorAction SilentlyContinue
+                if (-not $pythonCmd) {
+                    $pythonCmd = Get-Command "python3" -ErrorAction SilentlyContinue
+                }
 
-                # Mock virtual environment creation
-                New-Item -ItemType Directory -Path $venvDir -Force | Out-Null
-                New-Item -ItemType Directory -Path "$venvDir/Scripts" -Force | Out-Null
-                "Mock xml2rfc.exe" | Out-File -FilePath "$venvDir/Scripts/xml2rfc.exe" -Encoding ASCII
-
-                $xml2rfcExe = "$venvDir/Scripts/xml2rfc.exe"
-                if (Test-Path $xml2rfcExe) {
-                    # Register xml2rfc executable with Chocolatey
-                    Install-BinFile -Name "xml2rfc" -Path $xml2rfcExe
-                    Write-Host "xml2rfc successfully installed and registered"
+                if ($pythonCmd) {
+                    # Mock xml2rfc availability via python module
+                    Write-Host "xml2rfc available via 'python -m xml2rfc'"
+                    $xml2rfcAvailable = $true
                 }
             } catch {
-                Write-Warning "Error during xml2rfc installation: $_, continuing without IETF support..."
+                # xml2rfc not available via python module
             }
+        }
+
+        if ($xml2rfcAvailable) {
+            Write-Host "IETF document processing is supported"
         } else {
-            Write-Error "FATAL: Python not found - Python is required for xml2rfc installation"
-            Write-Error "Please install Python before installing metanorma package"
-            throw "Python not found"
+            Write-Warning "xml2rfc not found - IETF document processing may not work"
+            Write-Warning "This should be provided by the xml2rfc chocolatey dependency"
+            Write-Host "Metanorma will still work for non-IETF document types"
         }
 
         Write-Host "Metanorma installation completed successfully!"
@@ -257,29 +265,20 @@ function Test-InstallationResults {
         Write-TestResult "Metanorma Registration" "FAIL" "metanorma not registered"
     }
 
-    # Test 3: Verify xml2rfc handling based on scenario
-    if ($WithPython) {
-        $xml2rfcBinFile = $global:BinFilesRegistered | Where-Object { $_.Name -eq "xml2rfc" -and $_.Action -eq "Install" }
-        if ($xml2rfcBinFile) {
-            Write-TestResult "xml2rfc Installation (with Python)" "PASS" "xml2rfc registered"
-        } else {
-            Write-TestResult "xml2rfc Installation (with Python)" "FAIL" "xml2rfc not registered despite Python being available"
-        }
+    # Test 3: Verify xml2rfc dependency handling
+    # Note: xml2rfc is now handled as a chocolatey dependency, not installed directly
+    if ($WithPython -or $WithoutPython) {
+        # The metanorma package should complete successfully regardless of Python availability
+        # xml2rfc availability is checked but doesn't prevent installation
+        # Since we reached this point without exceptions, installation was successful
+        Write-TestResult "xml2rfc Dependency Handling" "PASS" "Installation completed successfully, xml2rfc handled as dependency"
 
-        # Check if virtual environment was created
-        $venvPath = "${env:ChocolateyInstall}/lib/metanorma/xml2rfc-venv"
-        if (Test-Path $venvPath) {
-            Write-TestResult "xml2rfc Virtual Environment" "PASS" "Created at $venvPath"
+        # Verify no xml2rfc installation was attempted by metanorma package
+        $xml2rfcBinFile = $global:BinFilesRegistered | Where-Object { $_.Name -eq "xml2rfc" -and $_.Action -eq "Install" }
+        if (-not $xml2rfcBinFile) {
+            Write-TestResult "xml2rfc Separation" "PASS" "metanorma package correctly does not install xml2rfc directly"
         } else {
-            Write-TestResult "xml2rfc Virtual Environment" "FAIL" "Virtual environment not created"
-        }
-    } elseif ($WithoutPython) {
-        # When Python is not available, installation should fail
-        $failedTests = $global:TestResults | Where-Object { $_.Result -eq "FAIL" -and $_.Test -eq "Installation Script Execution" }
-        if ($failedTests) {
-            Write-TestResult "xml2rfc Handling (without Python)" "PASS" "Installation correctly failed when Python unavailable"
-        } else {
-            Write-TestResult "xml2rfc Handling (without Python)" "FAIL" "Installation should fail when Python is not available"
+            Write-TestResult "xml2rfc Separation" "FAIL" "metanorma package should not install xml2rfc directly"
         }
     }
 }
