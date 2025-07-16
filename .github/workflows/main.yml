@@ -27,6 +27,70 @@ jobs:
           name: nupkg
           path: metanorma.*.nupkg
 
+      # Test the package installation and verify metanorma executable
+      - name: Test package installation
+        run: |
+          # Install the package from local source
+          $installResult = choco install --no-progress metanorma -dv -y -s ".;chocolatey" 2>&1 | Tee-Object -FilePath "choco.install.log"
+          if ($LASTEXITCODE -ne 0) {
+            # workaround for https://github.com/chocolatey/choco/issues/1691
+            Write-Host "Installation failed, checking for git installation error..."
+            Get-Content "choco.install.log" | Write-Host
+            if (Select-String -Path "choco.install.log" -Pattern "git.install.*exited 1") {
+              Write-Host "Git installation failed. Ignoring the error and retrying without dependencies."
+              choco install --ignore-dependencies --no-progress metanorma -dv -y -s ".;chocolatey"
+              if ($LASTEXITCODE -ne 0) {
+                Write-Error "Package installation failed even without dependencies"
+                exit 1
+              }
+            } else {
+              Write-Error "Package installation failed for unknown reason"
+              exit 1
+            }
+          }
+
+          # Verify metanorma executable is available
+          if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] metanorma executable found"
+            metanorma version
+          } else {
+            Write-Error "[ERROR] metanorma executable not found in PATH"
+            exit 1
+          }
+
+          # Verify xml2rfc is available (required for IETF support)
+          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] xml2rfc executable found"
+            xml2rfc --version
+          } else {
+            # Try python -m xml2rfc as fallback
+            try {
+              $xml2rfcVersion = & python -m xml2rfc --version 2>&1
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "[OK] xml2rfc available via python -m xml2rfc"
+                Write-Host $xml2rfcVersion
+              } else {
+                Write-Error "[ERROR] xml2rfc not available - IETF support requires xml2rfc"
+                exit 1
+              }
+            } catch {
+              Write-Error "[ERROR] xml2rfc not available - IETF support requires xml2rfc"
+              exit 1
+            }
+          }
+        shell: powershell
+
+  test-scripts:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test installation/uninstallation scripts
+        run: |
+          # Run comprehensive test suite
+          pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -Verbose
+        shell: powershell
+
   test-docker:
     runs-on: windows-2022 # must match to test/Dockerfile image
     needs: [build, build-matrix]
@@ -86,7 +150,7 @@ jobs:
       group: 'test-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
       cancel-in-progress: true
 
-    continue-on-error: ${{ matrix.flavor.experimental || matrix.flavor.id == 'ietf' }} # https://github.com/metanorma/chocolatey-metanorma/issues/78
+    continue-on-error: ${{ matrix.flavor.experimental }}
     strategy:
       max-parallel: 5
       fail-fast: false
@@ -100,11 +164,11 @@ jobs:
       # workaround for https://github.com/chocolatey/choco/issues/1691
       - run: |
           set +e
-          if ! choco install --no-progress -pre metanorma -dv -s "'.;chocolatey'" > choco.install.log 2>&1; then
+          if ! choco install --no-progress -pre metanorma -dv -s ".;chocolatey" > choco.install.log 2>&1; then
             cat choco.install.log
             if grep -q " - git\.install (exited 1)" choco.install.log; then
               echo "Git installation failed. Ignoring the error."
-              choco install --ignore-dependencies --no-progress -pre metanorma -dv -s "'.;chocolatey'"
+              choco install --ignore-dependencies --no-progress -pre metanorma -dv -s ".;chocolatey"
               exit 0
             else
               exit 1
@@ -129,7 +193,7 @@ jobs:
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
-    needs: test
+    needs: [test, test-scripts]
     steps:
       - uses: actions/checkout@v4
 
