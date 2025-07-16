@@ -4,12 +4,74 @@ image:https://github.com/metanorma/chocolatey-metanorma/workflows/main/badge.svg
 image:https://img.shields.io/chocolatey/v/metanorma.svg["Version", link="https://chocolatey.org/packages/metanorma"]
 image:https://img.shields.io/chocolatey/dt/metanorma.svg["Downloads", link="https://chocolatey.org/packages/metanorma"]
 
+== Repository purpose
+
+This repository is for developing the official Metanorma Chocolatey package.
+End users should install Metanorma directly from the official Chocolatey
+repository using standard Chocolatey commands.
+
+For end-user installation, see <<Installation from official repository>>.
+
+== Dependencies
+
+The Metanorma Chocolatey package specifies dependencies in its `nupkg` for
+better separation of concerns and easier maintenance.
+
+Key dependencies include:
+
+* `git` (version 2.50.0+)
+* `python3` (version 3.13.0+)
+* `openjdk` (version 22.0.2+)
+* `plantuml` (version 1.2025.2+)
+* `inkscape` (version 1.4.0+)
+* `graphviz` (version 2.28.0+)
+* `xml2rfc` (version 3.0.0+) (hosted at https://github.com/metanorma/chocolatey-xml2rfc[chocolatey-xml2rfc])
+
+When installing Metanorma via Chocolatey, all dependencies are resolved
+automatically.
+
+NOTE: Users do not need to manually install xml2rfc as previously required.
+
+
+== Using Metanorma in Windows Docker containers
+
+For developers building Windows Docker containers that need Metanorma, install
+both packages from the official Chocolatey repository.
+
+[source,dockerfile]
+----
+# Install Chocolatey (following the official method)
+RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    [System.Net.ServicePointManager]::SecurityProtocol = \
+    [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString( \
+    'https://community.chocolatey.org/install.ps1'))
+
+# Install Metanorma and dependencies from official Chocolatey
+RUN choco install metanorma -y --no-progress
+
+# Verify installation
+RUN metanorma version
+RUN xml2rfc --version
+----
+
+The Metanorma package will automatically install all required dependencies.
+
+[example]
+====
+For a complete working example, see the `test/Dockerfile` in this repository,
+which demonstrates proper installation and verification steps for Windows
+containers.
+====
+
+
 == Modifying the package
 
 . Edit the `metanorma.nuspec` configuration file.
 . Edit the `./tools/chocolateyInstall.ps1` install script
 . Edit the `./tools/chocolateyUninstall.ps1` uninstall script
 . You **must** save your files with *UTF-8* character encoding without BOM.
+
 
 == Building the package
 
@@ -18,15 +80,15 @@ image:https://img.shields.io/chocolatey/dt/metanorma.svg["Downloads", link="http
 NOTE: If you are running this from a command prompt/Powershell prompt, you must
 run it "`as Administrator`".
 
+
 == Testing the package
 
 === Automated testing
 
-The repository includes a comprehensive PowerShell test script that validates
-the installation and uninstallation logic without requiring actual Chocolatey
-installation:
+The repository includes a PowerShell test script that validates the installation
+and uninstallation logic without requiring actual Chocolatey installation:
 
-[source,sh]
+[source,powershell]
 ----
 # Run all test scenarios (Windows)
 pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -Verbose
@@ -40,14 +102,16 @@ pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -TestUninstall -Ve
 The test script validates:
 
 * Metanorma executable download and registration
-* xml2rfc installation when Python is available
-* Proper handling when Python is not available
+* xml2rfc dependency handling via chocolatey-xml2rfc package
+* Enhanced installation verification and error handling
 * Uninstallation and cleanup procedures
 * Windows Chocolatey package functionality
 
+
 === Manual testing
 
-NOTE: Manual testing should be done on a Virtual Machine (See: https://github.com/chocolatey/chocolatey-test-environment)
+NOTE: Manual testing should be done on a Virtual Machine (See:
+https://github.com/chocolatey/chocolatey-test-environment).
 
 In the package directory, use:
 
@@ -56,17 +120,22 @@ In the package directory, use:
 
 Or, use the full path:
 
-* `choco install metanorma -source 'c:\path\to\package' -f`
+* `choco install metanorma --source 'c:\path\to\package;chocolatey' -f`
+
+NOTE: It is important to include the Chocolatey source in the source list to
+ensure remote dependencies can be resolved, otherwise Chocolatey will only
+attempt to resolve dependencies locally.
 
 After executing the install, ensure that `metanorma.exe` is installed by
 executing the following command from the command prompt:
 
-[source,sh]
+[source,shell]
 ----
 metanorma version
 ----
 
 If it is properly installed, you will see the current version of Metanorma.
+
 
 === Testing uninstallation
 
@@ -74,7 +143,7 @@ NOTE: The Chocolatey install path on Windows is typically `C:\ProgramData\chocol
 
 Execute the following command to uninstall Metanorma.
 
-[source,sh]
+[source,shell]
 ----
 choco uninstall metanorma -y
 ----
@@ -83,12 +152,27 @@ After executing the uninstall ensure that `metanorma` is not found in the
 Chocolatey install path.
 
 You can also try running `metanorma version` from the command-line to see if it
-is still installed
+is still installed.
+
+=== Docker testing
+
+The repository includes Docker-based testing for Windows containers. This
+validates that the package works correctly in containerized environments:
+
+[source,powershell]
+----
+# Build test container
+docker build -t metanorma-docker-test ./test
+
+# Verify container functionality
+docker run --rm metanorma-docker-test -Command "metanorma version"
+docker run --rm metanorma-docker-test -Command "xml2rfc --version"
+----
 
 
 == Publish the package to the Chocolatey community feed repository
 
-[source,sh]
+[source,shell]
 ----
 choco apikey -k [API_KEY_HERE] -source https://chocolatey.org/
 
@@ -98,18 +182,22 @@ choco push metanorma.[version num].nupkg -s https://chocolatey.org/
 
 == Installation from official repository
 
-[source,sh]
+[source,shell]
 ----
 choco install metanorma -y
 ----
 
 or
 
-[source,sh]
+[source,shell]
 ----
 cinst metanorma -y
 ----
 
 See the https://github.com/chocolatey/choco/wiki/CreatePackagesQuickStart[Chocolatey Packages Quick Start]
 for more information.
-# Test fixes for Windows compatibility
+
+
+== Copyright and license
+
+Copyright Ribose. Licensed under the same terms as `metanorma-cli`.
