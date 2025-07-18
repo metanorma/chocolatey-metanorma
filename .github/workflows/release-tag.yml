@@ -68,5 +68,5 @@ jobs:
         git add tools/metanorma.sha256.txt
         git add tools/metanorma.url.txt
         git commit -m "Bump version to ${PACKAGE_VERSION}"
-        git tag ${METANORMA_CLI_TAG}
+        git tag "v${PACKAGE_VERSION}"
         git push origin HEAD:${GITHUB_REF} --tags
