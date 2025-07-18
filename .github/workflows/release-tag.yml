@@ -36,8 +36,9 @@ jobs:
     - name: Parse metanorma-cli version
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
+        GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
       run: |
-        curl -LO --retry 3 https://raw.githubusercontent.com/metanorma/metanorma-build-scripts/main/gemver-to-semver.rb && chmod +x gemver-to-semver.rb
+        gh api repos/metanorma/metanorma-build-scripts/contents/gemver-to-semver.rb --jq '.content' | base64 -d > gemver-to-semver.rb && chmod +x gemver-to-semver.rb
         echo "PACKAGE_VERSION=$(./gemver-to-semver.rb --chocolatey ${METANORMA_CLI_TAG})" >> $GITHUB_ENV
 
     - name: Update metanorma.nuspec
@@ -56,10 +57,15 @@ jobs:
     - name: Prepare URL and SHA256 files
       env:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
+        GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
       run: |
         METANORMA_EXE_URL="https://github.com/metanorma/packed-mn/releases/download/${METANORMA_CLI_TAG}/metanorma-windows-x86_64.exe"
         echo "${METANORMA_EXE_URL}" > tools/metanorma.url.txt
-        curl -sL "${METANORMA_EXE_URL}" | sha256sum | cut -d ' ' -f 1 > tools/metanorma.sha256.txt
+        # Extract tag name from METANORMA_CLI_TAG for gh release download
+        TAG_NAME=$(echo "${METANORMA_CLI_TAG}" | sed 's|refs/tags/||')
+        gh release download "${TAG_NAME}" --repo metanorma/packed-mn --pattern "metanorma-windows-x86_64.exe" --output /tmp/metanorma-windows-x86_64.exe
+        sha256sum /tmp/metanorma-windows-x86_64.exe | cut -d ' ' -f 1 > tools/metanorma.sha256.txt
+        rm /tmp/metanorma-windows-x86_64.exe
         echo "Metanorma URL: $(cat tools/metanorma.url.txt) SHA265: $(cat tools/metanorma.sha256.txt)"
 
     - name: Push commit and tag
