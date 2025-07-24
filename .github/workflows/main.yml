@@ -27,20 +27,26 @@ jobs:
       - name: Pack Chocolatey package
         run: choco pack
 
+      # Install GitHub CLI
+      - name: Install GitHub CLI
+        run: choco install gh -y --no-progress
+        shell: powershell
+
       # Download xml2rfc dependency for Docker builds
       - name: Get latest xml2rfc release and download package
         run: |
           Write-Host "Getting latest xml2rfc release..." -ForegroundColor Yellow
-          $response = Invoke-RestMethod -Uri "https://api.github.com/repos/metanorma/chocolatey-xml2rfc/releases/latest"
-          $version = $response.tag_name
+          $release = gh release view --repo metanorma/chocolatey-xml2rfc --json tagName,assets | ConvertFrom-Json
+          $version = $release.tagName
           $versionNumber = $version.TrimStart('v')
-          $url = "https://github.com/metanorma/chocolatey-xml2rfc/releases/download/$version/xml2rfc.$versionNumber.nupkg"
           $filename = "xml2rfc.$versionNumber.nupkg"
           Write-Host "Latest version: $version"
-          Write-Host "Downloading xml2rfc package from: $url"
-          Invoke-WebRequest -Uri $url -OutFile $filename
+          Write-Host "Downloading xml2rfc package: $filename"
+          gh release download $version --repo metanorma/chocolatey-xml2rfc --pattern $filename
           Write-Host "Downloaded xml2rfc package: $filename" -ForegroundColor Green
         shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - uses: actions/upload-artifact@v4
         with:
