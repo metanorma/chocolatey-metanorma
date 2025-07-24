@@ -59,10 +59,10 @@ jobs:
         METANORMA_CLI_TAG: ${{ github.event.client_payload.ref || github.event.inputs.next_version }}
         GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
       run: |
-        METANORMA_EXE_URL="https://github.com/metanorma/packed-mn/releases/download/${METANORMA_CLI_TAG}/metanorma-windows-x86_64.exe"
-        echo "${METANORMA_EXE_URL}" > tools/metanorma.url.txt
         # Extract tag name from METANORMA_CLI_TAG for gh release download
         TAG_NAME=$(echo "${METANORMA_CLI_TAG}" | sed 's|refs/tags/||')
+        METANORMA_EXE_URL="https://github.com/metanorma/packed-mn/releases/download/${TAG_NAME}/metanorma-windows-x86_64.exe"
+        echo "${METANORMA_EXE_URL}" > tools/metanorma.url.txt
         gh release download "${TAG_NAME}" --repo metanorma/packed-mn --pattern "metanorma-windows-x86_64.exe" --output /tmp/metanorma-windows-x86_64.exe
         sha256sum /tmp/metanorma-windows-x86_64.exe | cut -d ' ' -f 1 > tools/metanorma.sha256.txt
         rm /tmp/metanorma-windows-x86_64.exe
