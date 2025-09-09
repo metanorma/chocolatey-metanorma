@@ -29,7 +29,6 @@
       <dependency id="git" version="[2.50.0,)"/>
       <dependency id="python3" version="[3.13.0,)"/>
       <dependency id="openjdk" version="[22.0.2,)"/>
-      <dependency id="plantuml" version="[1.2025.2,)"/>
       <dependency id="inkscape" version="[1.4.0,)"/>
       <dependency id="graphviz" version="[2.28.0,)"/>
       <dependency id="xml2rfc" version="[3.0.0,)"/>
