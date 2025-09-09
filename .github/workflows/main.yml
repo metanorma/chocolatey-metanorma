@@ -27,52 +27,13 @@ jobs:
       - name: Pack Chocolatey package
         run: choco pack
 
-      # Install GitHub CLI
-      - name: Install GitHub CLI
-        run: choco install gh -y --no-progress
-        shell: powershell
-
-      # Download xml2rfc dependency for Docker builds
-      - name: Get latest xml2rfc release and download package
-        run: |
-          Write-Host "Getting latest xml2rfc release..." -ForegroundColor Yellow
-          $release = gh release view --repo metanorma/chocolatey-xml2rfc --json tagName,assets | ConvertFrom-Json
-          $version = $release.tagName
-          $versionNumber = $version.TrimStart('v')
-          $filename = "xml2rfc.$versionNumber.nupkg"
-          Write-Host "Latest version: $version"
-          Write-Host "Downloading xml2rfc package: $filename"
-          gh release download $version --repo metanorma/chocolatey-xml2rfc --pattern $filename
-          Write-Host "Downloaded xml2rfc package: $filename" -ForegroundColor Green
-        shell: powershell
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: nupkg
-          path: |
-            metanorma.*.nupkg
-            xml2rfc.*.nupkg
+          path: metanorma.*.nupkg
 
-      # Install dependencies first, then xml2rfc from local package
-      - name: Install xml2rfc
-        run: choco install xml2rfc --source="'$(Get-Location);chocolatey'" -y --no-progress
-        shell: powershell
-
-      # Verify xml2rfc executable is available
-      - name: Verify xml2rfc installation
-        shell: powershell
-        run: |
-          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] xml2rfc executable found"
-            xml2rfc --version
-          } else {
-            Write-Error "xml2rfc not available - IETF support requires xml2rfc"
-            exit 1
-          }
-
-      # Install metanorma from local package and verify installation
+      # Install metanorma from local package
       - name: Install metanorma
         shell: powershell
         run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
@@ -86,6 +47,18 @@ jobs:
             metanorma version
           } else {
             Write-Error "metanorma executable not found in PATH"
+            exit 1
+          }
+
+      # Verify xml2rfc dependency is available
+      - name: Verify xml2rfc dependency
+        shell: powershell
+        run: |
+          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] xml2rfc dependency found"
+            xml2rfc --version
+          } else {
+            Write-Error "xml2rfc dependency not available - IETF support requires xml2rfc"
             exit 1
           }
 
@@ -125,7 +98,8 @@ jobs:
           name: nupkg
           path: test
 
-      # unfortunatelly windows docker image too big to prebuild it once
+      # Unfortunately the Windows docker image is too big to prebuild it in one
+      # step and push to Docker Hub.
       - run: docker build -t metanorma-docker-test .
         working-directory: test
 
@@ -175,24 +149,7 @@ jobs:
         with:
           name: nupkg
 
-      # Install dependencies first, then xml2rfc from local package
-      - name: Install xml2rfc
-        run: choco install xml2rfc --source="'$(Get-Location);chocolatey'" -y --no-progress
-        shell: powershell
-
-      # Verify xml2rfc executable is available
-      - name: Verify xml2rfc installation
-        shell: powershell
-        run: |
-          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] xml2rfc executable found"
-            xml2rfc --version
-          } else {
-            Write-Error "xml2rfc not available - IETF support requires xml2rfc"
-            exit 1
-          }
-
-      # Install metanorma from local package and verify installation
+      # Install metanorma from local package
       - name: Install metanorma
         shell: powershell
         run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
@@ -206,6 +163,18 @@ jobs:
             metanorma version
           } else {
             Write-Error "metanorma executable not found in PATH"
+            exit 1
+          }
+
+      # Verify xml2rfc dependency is available
+      - name: Verify xml2rfc dependency
+        shell: powershell
+        run: |
+          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
+            Write-Host "[OK] xml2rfc dependency found"
+            xml2rfc --version
+          } else {
+            Write-Error "xml2rfc dependency not available - IETF support requires xml2rfc"
             exit 1
           }
 

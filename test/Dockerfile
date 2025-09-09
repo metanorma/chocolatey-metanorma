@@ -18,11 +18,11 @@ RUN Set-ExecutionPolicy Bypass -Scope Process -Force; \
 RUN Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1; \
     refreshenv
 
-### Install xml2rfc and metanorma packages in a separate layer
+### Install metanorma and dependencies in a separate layer
 FROM chocolatey AS packages
 
-# Copy both packages to a dedicated directory
-COPY *.nupkg C:/packages/
+# Copy metanorma package to a dedicated directory
+COPY metanorma.*.nupkg C:/packages/
 
 # Debug: List files to verify COPY worked and show choco version
 RUN Write-Host '=== Chocolatey Version ==='; \
@@ -35,22 +35,7 @@ RUN Write-Host '=== Chocolatey Version ==='; \
 # Enable global confirmation for Chocolatey commands
 RUN choco feature enable -n allowGlobalConfirmation
 
-# Install xml2rfc from local package
-RUN choco install xml2rfc --source='C:\packages;chocolatey' -y --no-progress
-
-# Verify xml2rfc executables are available
-RUN if (Get-Command 'xml2rfc' -ErrorAction SilentlyContinue) { \
-        Write-Host '[OK] xml2rfc executable found'; \
-        & xml2rfc --version \
-    } else { \
-        Write-Error 'xml2rfc not available - IETF support requires xml2rfc'; \
-        exit 1 \
-    };
-
-RUN Write-Host '=== Verifying xml2rfc installation ==='; \
-    choco list xml2rfc --limit-output
-
-# Install metanorma from local package and verify installation
+# Install metanorma from local package (xml2rfc installed automatically as dependency)
 RUN choco install metanorma --source='C:\packages;chocolatey' -y --no-progress
 
 # Verify metanorma executables are available
@@ -59,6 +44,15 @@ RUN if (Get-Command 'metanorma' -ErrorAction SilentlyContinue) { \
         & metanorma version \
     } else { \
         Write-Error 'metanorma executable not found in PATH'; \
+        exit 1 \
+    };
+
+# Verify xml2rfc dependency is available
+RUN if (Get-Command 'xml2rfc' -ErrorAction SilentlyContinue) { \
+        Write-Host '[OK] xml2rfc dependency found'; \
+        & xml2rfc --version \
+    } else { \
+        Write-Error 'xml2rfc dependency not available - IETF support requires xml2rfc'; \
         exit 1 \
     };
 
