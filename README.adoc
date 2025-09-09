@@ -24,12 +24,10 @@ Key dependencies include:
 * `openjdk` (version 22.0.2+)
 * `inkscape` (version 1.4.0+)
 * `graphviz` (version 2.28.0+)
-* `xml2rfc` (version 3.0.0+) (hosted at https://github.com/metanorma/chocolatey-xml2rfc[chocolatey-xml2rfc])
+* `xml2rfc` (version 3.0.0+)
 
 When installing Metanorma via Chocolatey, all dependencies are resolved
 automatically.
-
-NOTE: Users do not need to manually install xml2rfc as previously required.
 
 
 == Using Metanorma in Windows Docker containers
@@ -101,7 +99,7 @@ pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -TestUninstall -Ve
 The test script validates:
 
 * Metanorma executable download and registration
-* xml2rfc dependency handling via chocolatey-xml2rfc package
+* xml2rfc dependency handling
 * Enhanced installation verification and error handling
 * Uninstallation and cleanup procedures
 * Windows Chocolatey package functionality
