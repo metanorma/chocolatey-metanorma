@@ -61,6 +61,20 @@ if (Test-Path $shimPath) {
   Write-Host "Metanorma executable is still available at: $exePath" -ForegroundColor Yellow
 }
 
+# Expose the payload's declared fontist command (tebako spec 03 §2.2/§6:
+# the package declares every command the payload carries; the distributor
+# picks which names to lay down — fontist is this package's pick). A
+# HARDLINK, never Install-BinFile: shimgen spawns the target with the
+# TARGET's argv0, and tebako's argv0 dispatch (spec 07 §1) would see
+# "metanorma" and boot the primary entry. The hardlink keeps the same
+# bytes under the fontist name, so argv0 selects the fontist entry.
+$fontistPath = "$($Env:ChocolateyInstall)\bin\fontist.exe"
+if (Test-Path $fontistPath) {
+  Remove-Item $fontistPath -Force
+}
+New-Item -ItemType HardLink -Path $fontistPath -Target $exePath | Out-Null
+Write-Host "fontist command linked at: $fontistPath" -ForegroundColor Green
+
 # Verify xml2rfc is available (provided by xml2rfc dependency)
 Write-Host "Verifying xml2rfc availability for IETF support..." -ForegroundColor Green
 

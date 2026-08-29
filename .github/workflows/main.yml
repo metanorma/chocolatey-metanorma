@@ -186,6 +186,33 @@ jobs:
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
 
+      # The OIML theme declares Futura PT — commercial fonts whose only
+      # fontist formulas live in the private fontist-formulas-private repo.
+      # Register that repo and install the fonts BEFORE site generation,
+      # exactly as mn-samples-oiml's own generate.yml does — but with the
+      # PACKAGED fontist: the chocolatey install links the payload's
+      # declared fontist command (tools/chocolateyinstall.ps1's hardlink —
+      # tebako argv0 dispatch, spec 07 §1), so no host Ruby is involved.
+      # (The previous shape's `gem install fontist` broke on the windows
+      # runner image: strscan's mkmf mangles the /C/hostedtoolcache path,
+      # no precompiled ucrt gem exists, and pwsh never failed the step on
+      # the broken install — chocolatey-metanorma#89.) Fonts land in the
+      # host ~/.fontist the packaged metanorma reads. Without this step the
+      # catalog never learns 'Futura PT Book' and the mn2pdf font manifest
+      # raises MissingFontError even with --continue-without-fonts.
+      - name: Install private fonts (OIML — Futura PT, licensed)
+        if: ${{ matrix.flavor.id == 'oiml' }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          fontist repo setup metanorma "https://${env:GH_TOKEN}@github.com/metanorma/fontist-formulas-private"
+          fontist repo update metanorma
+          fontist install "Futura PT Book"
+          fontist install "Futura PT Demi"
+          fontist install "Futura PT Light"
+
       - uses: actions-mn/site-gen@main
         with:
           agree-to-terms: true
