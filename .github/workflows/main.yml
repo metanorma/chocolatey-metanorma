@@ -216,18 +216,38 @@ jobs:
       # host ~/.fontist the packaged metanorma reads. Without this step the
       # catalog never learns 'Futura PT Book' and the mn2pdf font manifest
       # raises MissingFontError even with --continue-without-fonts.
-      - name: Install private fonts (OIML — Futura PT, licensed)
+      # The step ALSO installs the iso-family manifest's public fonts
+      # (Source Han Sans, Inter) through the default formulas repo — the
+      # reference metanorma/metanorma docker image preinstalls them, a
+      # fresh windows runner does not.
+      - name: Install fonts (OIML — private Futura PT + public iso-manifest set)
         if: ${{ matrix.flavor.id == 'oiml' }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
         run: |
           $PSNativeCommandUseErrorActionPreference = $true
+          # The default PUBLIC formulas repo first: a fresh runner's
+          # ~/.fontist is empty and `repo setup` only touches the private
+          # area — without this, public formulas (Source Han Sans, Inter)
+          # have no index and metanorma's auto-install dies mid-compile
+          # with "font is not supported".
+          fontist update
           fontist repo setup metanorma "https://${env:GH_TOKEN}@github.com/metanorma/fontist-formulas-private"
           fontist repo update metanorma
           fontist install "Futura PT Book"
           fontist install "Futura PT Demi"
           fontist install "Futura PT Light"
+          # The iso-family fonts_manifest (metanorma-iso's processor,
+          # inherited by the oiml flavor) also declares Source Han Sans
+          # (+ its Normal style) and Inter — preinstalled on the
+          # reference metanorma/metanorma docker image but absent from a
+          # fresh windows runner (Cambria/Times New Roman/Courier New
+          # resolve from the windows system index). mn2pdf's
+          # location_manifest raises MissingFontError for any of these
+          # even with --continue-without-fonts.
+          fontist install "Source Han Sans"
+          fontist install "Inter"
 
       - uses: actions-mn/site-gen@main
         with:
