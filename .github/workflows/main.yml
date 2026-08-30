@@ -37,12 +37,13 @@ jobs:
       - name: Install metanorma
         shell: powershell
         run: |
-          # Satisfy xml2rfc's python3 dependency with the latest STABLE
-          # first: with --pre on the metanorma install, the whole
-          # resolution graph opts into prereleases and python3 lands on
-          # python313 3.13.0-rc2, whose installer exits 1603 on the
-          # windows runner image (upstream feed breakage, 2026-08-30).
-          choco install python3 -y --no-progress
+          # xml2rfc 3.30.2 pins python3 to [3.8.0, 3.13.0). Latest stable
+          # (3.14.x) is out of range, and with --pre on the metanorma
+          # install the only in-range 3.13.x is python313 3.13.0-rc2 —
+          # whose installer exits 1603 on the windows runner image.
+          # Pre-install the known-good in-range stable so the dependency
+          # is already satisfied (verified against the feed 2026-08-30).
+          choco install python3 --version 3.12.10 -y --no-progress
           choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
 
       # Verify metanorma executable is available
@@ -160,12 +161,13 @@ jobs:
       - name: Install metanorma
         shell: powershell
         run: |
-          # Satisfy xml2rfc's python3 dependency with the latest STABLE
-          # first: with --pre on the metanorma install, the whole
-          # resolution graph opts into prereleases and python3 lands on
-          # python313 3.13.0-rc2, whose installer exits 1603 on the
-          # windows runner image (upstream feed breakage, 2026-08-30).
-          choco install python3 -y --no-progress
+          # xml2rfc 3.30.2 pins python3 to [3.8.0, 3.13.0). Latest stable
+          # (3.14.x) is out of range, and with --pre on the metanorma
+          # install the only in-range 3.13.x is python313 3.13.0-rc2 —
+          # whose installer exits 1603 on the windows runner image.
+          # Pre-install the known-good in-range stable so the dependency
+          # is already satisfied (verified against the feed 2026-08-30).
+          choco install python3 --version 3.12.10 -y --no-progress
           choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
 
       # Verify metanorma executable is available
