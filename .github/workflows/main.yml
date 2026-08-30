@@ -36,7 +36,7 @@ jobs:
       # Install metanorma from local package
       - name: Install metanorma
         shell: powershell
-        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
+        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
 
       # Verify metanorma executable is available
       - name: Verify metanorma installation
@@ -152,7 +152,7 @@ jobs:
       # Install metanorma from local package
       - name: Install metanorma
         shell: powershell
-        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
+        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
 
       # Verify metanorma executable is available
       - name: Verify metanorma installation

@@ -36,7 +36,7 @@ RUN Write-Host '=== Chocolatey Version ==='; \
 RUN choco feature enable -n allowGlobalConfirmation
 
 # Install metanorma from local package (xml2rfc installed automatically as dependency)
-RUN choco install metanorma --source='C:\packages;chocolatey' -y --no-progress
+RUN choco install metanorma --source='C:\packages;chocolatey' -y --pre --no-progress
 
 # Verify metanorma executables are available
 RUN if (Get-Command 'metanorma' -ErrorAction SilentlyContinue) { \
