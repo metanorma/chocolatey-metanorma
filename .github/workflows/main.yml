@@ -249,6 +249,28 @@ jobs:
           fontist install "Source Han Sans"
           fontist install "Inter"
 
+      # The twelve oiml-cs sample documents compile through the OIML-CS
+      # *taste* (metanorma-taste data/oiml-cs), introduced in
+      # metanorma-taste@fb410ea — AFTER the latest rubygems release (the
+      # payload ships taste 1.1.0; no tag contains the taste).
+      # mn-samples-oiml's own CI compiles them only because its Gemfile
+      # pins metanorma-taste to git main. This package is a released-gems
+      # closure: without the taste, each oiml-cs document dies in
+      # site-gen with `cannot load such file -- metanorma-oiml-cs` (the
+      # flavor-loader's fallback require after the taste registry misses).
+      # Drop the oiml-cs rows from the site config until a metanorma-taste
+      # release carries oiml-cs; every other oiml document (24 of them)
+      # compiles against the shipped closure.
+      - name: Scope site sources to released flavors (oiml)
+        if: ${{ matrix.flavor.id == 'oiml' }}
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $lines = Get-Content metanorma.yml
+          $kept = $lines | Where-Object { $_ -notmatch 'sources/oiml-cs-' }
+          Set-Content metanorma.yml $kept
+          Write-Host ("dropped {0} oiml-cs row(s) from metanorma.yml" -f ($lines.Count - $kept.Count))
+
       - uses: actions-mn/site-gen@main
         with:
           agree-to-terms: true
