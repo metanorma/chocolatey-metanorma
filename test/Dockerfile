@@ -36,6 +36,10 @@ RUN Write-Host '=== Chocolatey Version ==='; \
 RUN choco feature enable -n allowGlobalConfirmation
 
 # Install metanorma from local package (xml2rfc installed automatically as dependency)
+# Satisfy xml2rfc's python3 dependency with the latest STABLE first —
+# --pre on the metanorma install would otherwise pull python313
+# 3.13.0-rc2, whose installer exits 1603 on the windows image.
+RUN choco install python3 -y --no-progress
 RUN choco install metanorma --source='C:\packages;chocolatey' -y --pre --no-progress
 
 # Verify metanorma executables are available
