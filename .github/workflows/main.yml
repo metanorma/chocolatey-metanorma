@@ -36,7 +36,15 @@ jobs:
       # Install metanorma from local package
       - name: Install metanorma
         shell: powershell
-        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
+        run: |
+          # xml2rfc 3.30.2 pins python3 to [3.8.0, 3.13.0). Latest stable
+          # (3.14.x) is out of range, and with --pre on the metanorma
+          # install the only in-range 3.13.x is python313 3.13.0-rc2 —
+          # whose installer exits 1603 on the windows runner image.
+          # Pre-install the known-good in-range stable so the dependency
+          # is already satisfied (verified against the feed 2026-08-30).
+          choco install python3 --version 3.12.10 -y --no-progress
+          choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
 
       # Verify metanorma executable is available
       - name: Verify metanorma installation
@@ -152,7 +160,15 @@ jobs:
       # Install metanorma from local package
       - name: Install metanorma
         shell: powershell
-        run: choco install metanorma --source="'$(Get-Location);chocolatey'" -y --no-progress
+        run: |
+          # xml2rfc 3.30.2 pins python3 to [3.8.0, 3.13.0). Latest stable
+          # (3.14.x) is out of range, and with --pre on the metanorma
+          # install the only in-range 3.13.x is python313 3.13.0-rc2 —
+          # whose installer exits 1603 on the windows runner image.
+          # Pre-install the known-good in-range stable so the dependency
+          # is already satisfied (verified against the feed 2026-08-30).
+          choco install python3 --version 3.12.10 -y --no-progress
+          choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
 
       # Verify metanorma executable is available
       - name: Verify metanorma installation
@@ -185,6 +201,75 @@ jobs:
           repository: metanorma/mn-samples-${{ matrix.flavor.id }}
           token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
           fetch-depth: 1
+
+      # The OIML theme declares Futura PT — commercial fonts whose only
+      # fontist formulas live in the private fontist-formulas-private repo.
+      # Register that repo and install the fonts BEFORE site generation,
+      # exactly as mn-samples-oiml's own generate.yml does — but with the
+      # PACKAGED fontist: the chocolatey install links the payload's
+      # declared fontist command (tools/chocolateyinstall.ps1's hardlink —
+      # tebako argv0 dispatch, spec 07 §1), so no host Ruby is involved.
+      # (The previous shape's `gem install fontist` broke on the windows
+      # runner image: strscan's mkmf mangles the /C/hostedtoolcache path,
+      # no precompiled ucrt gem exists, and pwsh never failed the step on
+      # the broken install — chocolatey-metanorma#89.) Fonts land in the
+      # host ~/.fontist the packaged metanorma reads. Without this step the
+      # catalog never learns 'Futura PT Book' and the mn2pdf font manifest
+      # raises MissingFontError even with --continue-without-fonts.
+      # The step ALSO installs the iso-family manifest's public fonts
+      # (Source Han Sans, Inter) through the default formulas repo — the
+      # reference metanorma/metanorma docker image preinstalls them, a
+      # fresh windows runner does not.
+      - name: Install fonts (OIML — private Futura PT + public iso-manifest set)
+        if: ${{ matrix.flavor.id == 'oiml' }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          # The default PUBLIC formulas repo first: a fresh runner's
+          # ~/.fontist is empty and `repo setup` only touches the private
+          # area — without this, public formulas (Source Han Sans, Inter)
+          # have no index and metanorma's auto-install dies mid-compile
+          # with "font is not supported".
+          fontist update
+          fontist repo setup metanorma "https://${env:GH_TOKEN}@github.com/metanorma/fontist-formulas-private"
+          fontist repo update metanorma
+          fontist install "Futura PT Book"
+          fontist install "Futura PT Demi"
+          fontist install "Futura PT Light"
+          # The iso-family fonts_manifest (metanorma-iso's processor,
+          # inherited by the oiml flavor) also declares Source Han Sans
+          # (+ its Normal style) and Inter — preinstalled on the
+          # reference metanorma/metanorma docker image but absent from a
+          # fresh windows runner (Cambria/Times New Roman/Courier New
+          # resolve from the windows system index). mn2pdf's
+          # location_manifest raises MissingFontError for any of these
+          # even with --continue-without-fonts.
+          fontist install "Source Han Sans"
+          fontist install "Inter"
+
+      # The twelve oiml-cs sample documents compile through the OIML-CS
+      # *taste* (metanorma-taste data/oiml-cs), introduced in
+      # metanorma-taste@fb410ea — AFTER the latest rubygems release (the
+      # payload ships taste 1.1.0; no tag contains the taste).
+      # mn-samples-oiml's own CI compiles them only because its Gemfile
+      # pins metanorma-taste to git main. This package is a released-gems
+      # closure: without the taste, each oiml-cs document dies in
+      # site-gen with `cannot load such file -- metanorma-oiml-cs` (the
+      # flavor-loader's fallback require after the taste registry misses).
+      # Drop the oiml-cs rows from the site config until a metanorma-taste
+      # release carries oiml-cs; every other oiml document (24 of them)
+      # compiles against the shipped closure.
+      - name: Scope site sources to released flavors (oiml)
+        if: ${{ matrix.flavor.id == 'oiml' }}
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $lines = Get-Content metanorma.yml
+          $kept = $lines | Where-Object { $_ -notmatch 'sources/oiml-cs-' }
+          Set-Content metanorma.yml $kept
+          Write-Host ("dropped {0} oiml-cs row(s) from metanorma.yml" -f ($lines.Count - $kept.Count))
 
       - uses: actions-mn/site-gen@main
         with:

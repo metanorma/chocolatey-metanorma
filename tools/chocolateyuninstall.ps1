@@ -10,6 +10,18 @@ try {
   Write-Warning "Could not unregister metanorma executable: $_"
 }
 
+# Remove the fontist hardlink (the argv0-dispatched bundled command —
+# see chocolateyinstall.ps1)
+$fontistPath = "$($Env:ChocolateyInstall)\bin\fontist.exe"
+if (Test-Path $fontistPath) {
+  try {
+    Remove-Item -Path $fontistPath -Force
+    Write-Host "fontist command link removed" -ForegroundColor Yellow
+  } catch {
+    Write-Warning "Could not remove the fontist link: $_"
+  }
+}
+
 # Clean up metanorma.exe from tools directory
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $exePath = Join-Path $toolsDir "metanorma.exe"
