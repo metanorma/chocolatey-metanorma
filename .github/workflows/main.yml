@@ -49,15 +49,16 @@ jobs:
 
       # The MSI seeds the runtime at install time, but the first shim
       # dispatch may still need minutes (runtime fetch/warm); poll rather
-      # than assert once. Update-SessionEnvironment picks up the machine
-      # PATH the MSI just wired.
+      # than assert once. Refresh PATH from the registry each round to pick
+      # up the machine PATH the MSI just wired (Update-SessionEnvironment
+      # needs a chocolatey helper module pwsh 7 does not ship).
       - name: Verify metanorma answers on PATH
         shell: pwsh
         run: |
           $deadline = (Get-Date).AddMinutes(15)
           $ready = $false
           while ((Get-Date) -lt $deadline) {
-            Update-SessionEnvironment
+            $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
             if (Get-Command metanorma -ErrorAction SilentlyContinue) {
               $out = & metanorma --version 2>&1 | Out-String
               Write-Host "metanorma --version: $out"
@@ -79,7 +80,7 @@ jobs:
         run: |
           choco uninstall metanorma -y --no-progress
           if ($LASTEXITCODE -ne 0) { throw "choco uninstall failed with exit code $LASTEXITCODE" }
-          Update-SessionEnvironment
+          $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
           if (Get-Command metanorma -ErrorAction SilentlyContinue) {
             throw 'metanorma is still on PATH after uninstall'
           }
