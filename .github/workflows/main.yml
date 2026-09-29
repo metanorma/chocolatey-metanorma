@@ -107,7 +107,32 @@ jobs:
         with:
           name: nupkg
 
-      - name: Push to chocolatey.org
+      - name: Skip when chocolatey.org already has this version
+        id: dupcheck
+        shell: pwsh
+        run: |
+          # Respin tags re-fire the release fan-out; chocolatey.org rejects
+          # a duplicate version push with a hard error. The Packages feed
+          # lists versions still in moderation too, so a just-pushed
+          # version is found here.
+          $nupkg = Get-ChildItem *.nupkg | Select-Object -First 1
+          if ($nupkg.Name -match '^metanorma\.(.+)\.nupkg$') { $v = $Matches[1] } else { throw "cannot parse the version from $($nupkg.Name)" }
+          $found = $false
+          try {
+            Invoke-RestMethod "https://community.chocolatey.org/api/v2/Packages(Id='metanorma',Version='$v')" | Out-Null
+            $found = $true
+          } catch {
+            if ($_.Exception.Response.StatusCode.value__ -ne 404) { throw }
+          }
+          if ($found) {
+            Write-Host "chocolatey.org already has metanorma $v (published or in moderation) — skipping the push"
+            "skip=true" | Out-File $env:GITHUB_OUTPUT -Append
+          } else {
+            "skip=false" | Out-File $env:GITHUB_OUTPUT -Append
+          }
+
+      - if: steps.dupcheck.outputs.skip == 'false'
+        name: Push to chocolatey.org
         shell: pwsh
         env:
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
