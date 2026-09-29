@@ -15,6 +15,10 @@ on:
         description: 'Metanorma product version (e.g. 1.17.0) — the newest packed-metanorma release carrying metanorma-setup-<version>-windows-ucrt64.msi is wrapped'
         required: true
         type: string
+  repository_dispatch:
+    # Release fan-out from metanorma/packed-metanorma tag builds; the
+    # payload carries client_payload.version (the plain product version).
+    types: [ metanorma/packed-metanorma ]
 
 jobs:
   build:
@@ -22,11 +26,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve the target version
+        shell: pwsh
+        run: |
+          $v = '${{ inputs.version }}'
+          if (-not $v) { $v = '${{ github.event.client_payload.version }}' }
+          if (-not $v) { throw 'no version: dispatch needs inputs.version or client_payload.version' }
+          "TARGET_VERSION=$v" | Out-File $env:GITHUB_ENV -Append
+
       - name: Build the wrapper package
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./build.ps1 -Version '${{ inputs.version }}'
+        run: ./build.ps1 -Version "$env:TARGET_VERSION"
 
       - uses: actions/upload-artifact@v4
         with:
