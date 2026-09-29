@@ -74,8 +74,8 @@ Write-Utf8File $nuspecPath $nuspec
 # --- Render tools/chocolateyInstall.ps1 -----------------------------------
 $installPath = Join-Path $root 'tools\chocolateyInstall.ps1'
 $install = Get-Content $installPath -Raw
-$install = $install -replace "(?m)(url64bit\s+=\s+')[^']+(')", ('$1' + $msiUrl + '$2')
-$install = $install -replace "(?m)(checksum64\s+=\s+')[^']+(')", ('$1' + $checksum + '$2')
+$install = $install -replace "(?m)(url64bit\s+=\s+')[^']+(')", ('${1}' + $msiUrl + '${2}')
+$install = $install -replace "(?m)(checksum64\s+=\s+')[^']+(')", ('${1}' + $checksum + '${2}')
 Write-Utf8File $installPath $install
 
 # --- Pack ------------------------------------------------------------------
