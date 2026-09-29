@@ -1,302 +1,104 @@
 name: main
 
+# Release flow: dispatch with the Metanorma product version (e.g. 1.17.0).
+# build.ps1 locates the newest packed-metanorma release carrying the
+# matching signed MSI, renders the nuspec + install script, and packs the
+# wrapper nupkg. The test job installs it from the local source, polls
+# `metanorma --version` until the seeded runtime answers, then uninstalls.
+# Only a green test unlocks the publish job, gated by the
+# `chocolatey-publish` environment.
+
 on:
-  push:
-    branches: [ main ]
-    tags: [ 'v*' ]
-    paths-ignore:
-      - '*.adoc'
-  pull_request:
-    paths-ignore:
-      - '*.adoc'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Metanorma product version (e.g. 1.17.0) — the newest packed-metanorma release carrying metanorma-setup-<version>-windows-ucrt64.msi is wrapped'
+        required: true
+        type: string
 
 jobs:
-  build-matrix:
-    name: Matrix
-    uses: metanorma/ci/.github/workflows/build-sample-matrix.yml@main
-    with:
-      smoke: false
-      flavors-only: true
-      public-only: true
-
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pack Chocolatey package
-        run: choco pack
-
+      - name: Build the wrapper package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./build.ps1 -Version '${{ inputs.version }}'
 
       - uses: actions/upload-artifact@v4
         with:
           name: nupkg
           path: metanorma.*.nupkg
 
-      # Install metanorma from local package
-      - name: Install metanorma
-        shell: powershell
-        run: |
-          # xml2rfc 3.30.2 pins python3 to [3.8.0, 3.13.0). Latest stable
-          # (3.14.x) is out of range, and with --pre on the metanorma
-          # install the only in-range 3.13.x is python313 3.13.0-rc2 —
-          # whose installer exits 1603 on the windows runner image.
-          # Pre-install the known-good in-range stable so the dependency
-          # is already satisfied (verified against the feed 2026-08-30).
-          choco install python3 --version 3.12.10 -y --no-progress
-          choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
-
-      # Verify metanorma executable is available
-      - name: Verify metanorma installation
-        shell: powershell
-        run: |
-          if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] metanorma executable found"
-            metanorma version
-          } else {
-            Write-Error "metanorma executable not found in PATH"
-            exit 1
-          }
-
-      # Verify xml2rfc dependency is available
-      - name: Verify xml2rfc dependency
-        shell: powershell
-        run: |
-          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] xml2rfc dependency found"
-            xml2rfc --version
-          } else {
-            Write-Error "xml2rfc dependency not available - IETF support requires xml2rfc"
-            exit 1
-          }
-
-  test-scripts:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Test installation/uninstallation scripts
-        run: |
-          # Run comprehensive test suite
-          pwsh -ExecutionPolicy Bypass -File test/test_installation.ps1 -Verbose
-        shell: powershell
-
-  test-docker:
-    runs-on: windows-2022 # must match to test/Dockerfile image
-    needs: [build, build-matrix]
-
-    concurrency:
-      group: 'test-docker-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
-      cancel-in-progress: true
-
-    continue-on-error: ${{ matrix.flavor.experimental }}
-    strategy:
-      max-parallel: 5
-      fail-fast: true
-      matrix: # ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
-        flavor: # https://github.com/metanorma/chocolatey-metanorma/issues/73
-          - id: iso
-            experimental: true
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: nupkg
-          path: test
-
-      # Unfortunately the Windows docker image is too big to prebuild it in one
-      # step and push to Docker Hub.
-      - run: docker build -t metanorma-docker-test .
-        working-directory: test
-
-      - run: docker image inspect metanorma-docker-test
-
-      - name: Fetch samples (${{ matrix.flavor.id }})
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
-          path: ${{ matrix.flavor.id }}
-          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
-          fetch-depth: 1
-
-      - name: Setup metanorma command and generate site documentation
-        working-directory: ${{ matrix.flavor.id }}
-        shell: powershell
-        run: |
-          # Generate site documentation directly with docker
-          # Mount current directory and run metanorma command inside container
-          $currentDir = (Get-Location).Path
-          docker run --rm -v "${currentDir}:C:\workspace" -w "C:\workspace" metanorma-docker-test -Command "metanorma site generate -c C:\workspace\metanorma.yml --agree-to-terms"
-
-      # actions-mn/site-gen@main does not support Windows yet
-      # - uses: actions-mn/site-gen@main
-      #   with:
-      #     agree-to-terms: true
-      #     source-path: ${{ matrix.flavor.id }}
   test:
     runs-on: windows-latest
-    needs: [build, build-matrix]
-
-    concurrency:
-      group: 'test-${{ github.workflow }}-${{ github.job }}-${{ matrix.flavor.id }}-${{ github.head_ref || github.ref_name }}'
-      cancel-in-progress: true
-
-    continue-on-error: ${{ matrix.flavor.experimental }}
-    strategy:
-      max-parallel: 5
-      fail-fast: false
-      matrix: ${{ fromJson(needs.build-matrix.outputs.samples-matrix) }}
-
+    needs: build
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           name: nupkg
 
-      # Install metanorma from local package
-      - name: Install metanorma
-        shell: powershell
-        run: |
-          # xml2rfc 3.30.2 pins python3 to [3.8.0, 3.13.0). Latest stable
-          # (3.14.x) is out of range, and with --pre on the metanorma
-          # install the only in-range 3.13.x is python313 3.13.0-rc2 —
-          # whose installer exits 1603 on the windows runner image.
-          # Pre-install the known-good in-range stable so the dependency
-          # is already satisfied (verified against the feed 2026-08-30).
-          choco install python3 --version 3.12.10 -y --no-progress
-          choco install metanorma --source="'$(Get-Location);chocolatey'" -y --pre --no-progress
-
-      # Verify metanorma executable is available
-      - name: Verify metanorma installation
-        shell: powershell
-        run: |
-          if (Get-Command "metanorma" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] metanorma executable found"
-            metanorma version
-          } else {
-            Write-Error "metanorma executable not found in PATH"
-            exit 1
-          }
-
-      # Verify xml2rfc dependency is available
-      - name: Verify xml2rfc dependency
-        shell: powershell
-        run: |
-          if (Get-Command "xml2rfc" -ErrorAction SilentlyContinue) {
-            Write-Host "[OK] xml2rfc dependency found"
-            xml2rfc --version
-          } else {
-            Write-Error "xml2rfc dependency not available - IETF support requires xml2rfc"
-            exit 1
-          }
-
-      - name: Fetch samples (${{ matrix.flavor.id }})
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          repository: metanorma/mn-samples-${{ matrix.flavor.id }}
-          token: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
-          fetch-depth: 1
-
-      # The OIML theme declares Futura PT — commercial fonts whose only
-      # fontist formulas live in the private fontist-formulas-private repo.
-      # Register that repo and install the fonts BEFORE site generation,
-      # exactly as mn-samples-oiml's own generate.yml does — but with the
-      # PACKAGED fontist: the chocolatey install links the payload's
-      # declared fontist command (tools/chocolateyinstall.ps1's hardlink —
-      # tebako argv0 dispatch, spec 07 §1), so no host Ruby is involved.
-      # (The previous shape's `gem install fontist` broke on the windows
-      # runner image: strscan's mkmf mangles the /C/hostedtoolcache path,
-      # no precompiled ucrt gem exists, and pwsh never failed the step on
-      # the broken install — chocolatey-metanorma#89.) Fonts land in the
-      # host ~/.fontist the packaged metanorma reads. Without this step the
-      # catalog never learns 'Futura PT Book' and the mn2pdf font manifest
-      # raises MissingFontError even with --continue-without-fonts.
-      # The step ALSO installs the iso-family manifest's public fonts
-      # (Source Han Sans, Inter) through the default formulas repo — the
-      # reference metanorma/metanorma docker image preinstalls them, a
-      # fresh windows runner does not.
-      - name: Install fonts (OIML — private Futura PT + public iso-manifest set)
-        if: ${{ matrix.flavor.id == 'oiml' }}
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.METANORMA_CI_PAT_TOKEN }}
-        run: |
-          $PSNativeCommandUseErrorActionPreference = $true
-          # The default PUBLIC formulas repo first: a fresh runner's
-          # ~/.fontist is empty and `repo setup` only touches the private
-          # area — without this, public formulas (Source Han Sans, Inter)
-          # have no index and metanorma's auto-install dies mid-compile
-          # with "font is not supported".
-          fontist update
-          fontist repo setup metanorma "https://${env:GH_TOKEN}@github.com/metanorma/fontist-formulas-private"
-          fontist repo update metanorma
-          fontist install "Futura PT Book"
-          fontist install "Futura PT Demi"
-          fontist install "Futura PT Light"
-          # The iso-family fonts_manifest (metanorma-iso's processor,
-          # inherited by the oiml flavor) also declares Source Han Sans
-          # (+ its Normal style) and Inter — preinstalled on the
-          # reference metanorma/metanorma docker image but absent from a
-          # fresh windows runner (Cambria/Times New Roman/Courier New
-          # resolve from the windows system index). mn2pdf's
-          # location_manifest raises MissingFontError for any of these
-          # even with --continue-without-fonts.
-          fontist install "Source Han Sans"
-          fontist install "Inter"
-
-      # The twelve oiml-cs sample documents compile through the OIML-CS
-      # *taste* (metanorma-taste data/oiml-cs), introduced in
-      # metanorma-taste@fb410ea — AFTER the latest rubygems release (the
-      # payload ships taste 1.1.0; no tag contains the taste).
-      # mn-samples-oiml's own CI compiles them only because its Gemfile
-      # pins metanorma-taste to git main. This package is a released-gems
-      # closure: without the taste, each oiml-cs document dies in
-      # site-gen with `cannot load such file -- metanorma-oiml-cs` (the
-      # flavor-loader's fallback require after the taste registry misses).
-      # Drop the oiml-cs rows from the site config until a metanorma-taste
-      # release carries oiml-cs; every other oiml document (24 of them)
-      # compiles against the shipped closure.
-      - name: Scope site sources to released flavors (oiml)
-        if: ${{ matrix.flavor.id == 'oiml' }}
+      - name: Install metanorma from the local package
         shell: pwsh
         run: |
-          $PSNativeCommandUseErrorActionPreference = $true
-          $lines = Get-Content metanorma.yml
-          $kept = $lines | Where-Object { $_ -notmatch 'sources/oiml-cs-' }
-          Set-Content metanorma.yml $kept
-          Write-Host ("dropped {0} oiml-cs row(s) from metanorma.yml" -f ($lines.Count - $kept.Count))
+          choco install metanorma --source "$((Get-Location).Path)" -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "choco install failed with exit code $LASTEXITCODE" }
 
-      - uses: actions-mn/site-gen@main
-        with:
-          agree-to-terms: true
+      # The MSI seeds the runtime at install time, but the first shim
+      # dispatch may still need minutes (runtime fetch/warm); poll rather
+      # than assert once. Update-SessionEnvironment picks up the machine
+      # PATH the MSI just wired.
+      - name: Verify metanorma answers on PATH
+        shell: pwsh
+        run: |
+          $deadline = (Get-Date).AddMinutes(15)
+          $ready = $false
+          while ((Get-Date) -lt $deadline) {
+            Update-SessionEnvironment
+            if (Get-Command metanorma -ErrorAction SilentlyContinue) {
+              $out = & metanorma --version 2>&1 | Out-String
+              Write-Host "metanorma --version: $out"
+              if ($LASTEXITCODE -eq 0 -and $out -match 'Metanorma::Cli') {
+                $ready = $true
+                break
+              }
+            } else {
+              Write-Host 'metanorma not on PATH yet'
+            }
+            Start-Sleep -Seconds 20
+          }
+          if (-not $ready) {
+            throw 'metanorma --version did not report Metanorma::Cli within 15 minutes'
+          }
 
-      - name: Uninstall metanorma
-        run: choco uninstall metanorma -y
+      - name: Uninstall metanorma and assert removal
+        shell: pwsh
+        run: |
+          choco uninstall metanorma -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "choco uninstall failed with exit code $LASTEXITCODE" }
+          Update-SessionEnvironment
+          if (Get-Command metanorma -ErrorAction SilentlyContinue) {
+            throw 'metanorma is still on PATH after uninstall'
+          }
+          Write-Host 'metanorma removed cleanly'
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
-    needs: [test, test-scripts]
+    needs: test
+    environment: chocolatey-publish
     steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/download-artifact@v4
         with:
           name: nupkg
 
-      - name: Push to chocolatey
+      - name: Push to chocolatey.org
         shell: pwsh
         env:
-          CHOCO_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
         run: |
-          $namespaces = @{nuspec = "http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd"}
-          $pkgVersion = Select-Xml -Path metanorma.nuspec `
-               -XPath "/nuspec:package/nuspec:metadata/nuspec:version/text()" `
-               -Namespace $namespaces | Select-Object -Expand Node | Select-Object -Expand Data
-          choco apikey -key $Env:CHOCO_API_KEY -source https://chocolatey.org/
-          choco push metanorma.${pkgVersion}.nupkg -source https://chocolatey.org/
+          $nupkg = Get-ChildItem *.nupkg | Select-Object -First 1
+          choco apikey --key $env:CHOCOLATEY_API_KEY --source https://push.chocolatey.org/
+          choco push $nupkg.Name --source https://push.chocolatey.org/

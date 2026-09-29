@@ -2,36 +2,25 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>metanorma</id>
-    <version>1.16.9-pre</version>
-    <owners>ribose</owners>
+    <version>1.17.0</version>
+    <owners>Ribose</owners>
     <title>Metanorma</title>
     <authors>Ribose Inc.</authors>
     <iconUrl>https://cdn.statically.io/gh/metanorma/metanorma.org/main/assets/symbol.svg</iconUrl>
     <projectUrl>https://www.metanorma.org/</projectUrl>
     <copyright>2026 Ribose Inc.</copyright>
     <licenseUrl>https://raw.githubusercontent.com/metanorma/metanorma/main/LICENSE.txt</licenseUrl>
-    <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/metanorma/packed-mn</projectSourceUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/metanorma/packed-metanorma</projectSourceUrl>
     <packageSourceUrl>https://github.com/metanorma/chocolatey-metanorma</packageSourceUrl>
-    <releaseNotes>https://github.com/metanorma/metanorma/releases</releaseNotes>
+    <releaseNotes>https://github.com/metanorma/packed-metanorma/releases/tag/v1.17.0-1</releaseNotes>
     <docsUrl>https://www.metanorma.org/author/getting-started/</docsUrl>
     <bugTrackerUrl>https://github.com/metanorma/chocolatey-metanorma/issues</bugTrackerUrl>
     <tags>metanorma standards publishing documentation</tags>
     <summary>The award-winning standards publication suite.</summary>
     <description><![CDATA[Metanorma is the award-winning, open-source, digital standards suite for authoring and publishing adopted by SDOs worldwide. Start delivering tomorrow's standards, today.
 
- ## VirusTotal results
-
- Research about [high detections from VirusTotal](https://github.com/metanorma/chocolatey-metanorma/issues/61#issuecomment-968661076)
-
-  We constantly recheck VirusTotal reports and can confirm that reported issues are false-positive]]></description>
-    <dependencies>
-      <dependency id="git" version="[2.50.0,)"/>
-      <dependency id="openjdk" version="[22.0.2,)"/>
-      <dependency id="inkscape" version="[1.4.0,)"/>
-      <dependency id="graphviz" version="[2.28.0,)"/>
-      <dependency id="xml2rfc" version="[3.0.0,)"/>
-    </dependencies>
+This Chocolatey package is a thin wrapper around the signed Metanorma Windows installer (MSI), downloaded at install time from the packed-metanorma release and verified against the embedded SHA256 checksum. The MSI performs a per-machine install under Program Files, puts the metanorma command on the system PATH, and seeds the runtime so the first run needs no further downloads.]]></description>
   </metadata>
   <files>
     <file src="tools\**" target="tools"/>
