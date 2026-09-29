@@ -32,7 +32,7 @@ $assetName = "metanorma-setup-$Version-windows-ucrt64.msi"
 
 # --- Find the newest release carrying the MSI asset -----------------------
 Write-Host "Looking for the newest $Repo release carrying $assetName ..."
-$tags = gh release list --repo $Repo --limit 50 --json tagName, isDraft |
+$tags = gh release list --repo $Repo --limit 50 --json tagName,isDraft |
   ConvertFrom-Json | Where-Object { -not $_.isDraft } | ForEach-Object { $_.tagName }
 
 $tag = $null
