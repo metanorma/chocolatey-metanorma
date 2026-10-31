@@ -15,6 +15,10 @@ on:
         description: 'Metanorma product version (e.g. 1.17.0) — the newest packed-metanorma release carrying metanorma-setup-<version>-windows-ucrt64.msi is wrapped'
         required: true
         type: string
+      package_version:
+        description: 'Publish the package AS this version when it must differ from the product version (a wrapper-only respin rides the fourth segment, e.g. 1.17.0.20261031; default: the product version)'
+        required: false
+        type: string
   repository_dispatch:
     # Release fan-out from metanorma/packed-metanorma tag builds; the
     # payload carries client_payload.version (the plain product version).
@@ -33,12 +37,15 @@ jobs:
           if (-not $v) { $v = '${{ github.event.client_payload.version }}' }
           if (-not $v) { throw 'no version: dispatch needs inputs.version or client_payload.version' }
           "TARGET_VERSION=$v" | Out-File $env:GITHUB_ENV -Append
+          $pv = '${{ inputs.package_version }}'
+          if (-not $pv) { $pv = '${{ github.event.client_payload.package_version }}' }
+          "PACKAGE_VERSION=$pv" | Out-File $env:GITHUB_ENV -Append
 
       - name: Build the wrapper package
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./build.ps1 -Version "$env:TARGET_VERSION"
+        run: ./build.ps1 -Version "$env:TARGET_VERSION" -PackageVersion "$env:PACKAGE_VERSION"
 
       - uses: actions/upload-artifact@v4
         with:

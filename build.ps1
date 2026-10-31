@@ -22,6 +22,13 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$Version,
 
+  # The package's published version when it must differ from the product
+  # version — a package-only respin of the same product (a fix in the
+  # wrapper, not the payload) rides the fourth segment
+  # (1.17.0.20261031), because chocolatey.org rejects a duplicate push of
+  # the same version. Default: the product version.
+  [string]$PackageVersion = '',
+
   [string]$Repo = 'metanorma/packed-metanorma'
 )
 
@@ -29,6 +36,7 @@ $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $assetName = "metanorma-setup-$Version-windows-ucrt64.msi"
+if (-not $PackageVersion) { $PackageVersion = $Version }
 
 # --- Find the newest release carrying the MSI asset -----------------------
 Write-Host "Looking for the newest $Repo release carrying $assetName ..."
@@ -67,7 +75,7 @@ function Write-Utf8File([string]$Path, [string]$Content) {
 # --- Render metanorma.nuspec ----------------------------------------------
 $nuspecPath = Join-Path $root 'metanorma.nuspec'
 $nuspec = Get-Content $nuspecPath -Raw
-$nuspec = $nuspec -replace '(?<=<version>)[^<]+(?=</version>)', $Version
+$nuspec = $nuspec -replace '(?<=<version>)[^<]+(?=</version>)', $PackageVersion
 $nuspec = $nuspec -replace '(?<=<releaseNotes>)[^<]+(?=</releaseNotes>)', $releaseUrl
 Write-Utf8File $nuspecPath $nuspec
 
@@ -86,7 +94,7 @@ try {
   Pop-Location
 }
 
-$nupkg = Join-Path $root "metanorma.$Version.nupkg"
+$nupkg = Join-Path $root "metanorma.$PackageVersion.nupkg"
 if (-not (Test-Path $nupkg)) {
   throw "choco pack did not produce $nupkg"
 }
