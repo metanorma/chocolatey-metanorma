@@ -16,15 +16,14 @@ $packageArgs = @{
 }
 
 Install-ChocolateyPackage @packageArgs
-Install-ChocolateyPackage @packageArgs
 
-# The MSI wires the MACHINE PATH — but a running process never re-reads
+# The MSI wires the MACHINE PATH -- but a running process never re-reads
 # it, and on CI each later step inherits the job-start snapshot, so the
 # exe stays unreachable even though the install succeeded
 # (metanorma/packed-metanorma#274: the generate legs red fleet-wide).
 # Register the Chocolatey shim in the choco bin dir, which IS on PATH
 # from job start. The shim targets the MSI's zero-config dispatch entry
-# (home\shims\metanorma.exe — the packed-metanorma rehearsal's proven
+# (home\shims\metanorma.exe -- the packed-metanorma rehearsal's proven
 # path); the install root resolves from the product's registry
 # InstallDir first, the default location as the fallback.
 $reg = Get-ItemProperty 'HKLM:\Software\Metanorma\metanorma' -ErrorAction SilentlyContinue
@@ -33,5 +32,5 @@ $exe = Join-Path $installRoot 'home\shims\metanorma.exe'
 if (Test-Path $exe) {
   Install-BinFile -Name 'metanorma' -Path $exe
 } else {
-  Write-Warning "metanorma.exe not found at $exe — the zero-config shim did not land; a NEW shell still resolves it from the system PATH."
+  Write-Warning "metanorma.exe not found at $exe -- the zero-config shim did not land; a NEW shell still resolves it from the system PATH."
 }
